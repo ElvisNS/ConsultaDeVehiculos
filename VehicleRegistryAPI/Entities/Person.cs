@@ -1,8 +1,7 @@
 ﻿namespace VehicleRegistryAPI.Entities
 {
-    public class Person
+    public class Person : BaseEntity
     {
-        public int Id { get; set; }
         public string NationalId { get; set; }
         public string FullName { get; set; }
 

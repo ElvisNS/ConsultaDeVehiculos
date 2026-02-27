@@ -3,9 +3,8 @@ using System.Text.RegularExpressions;
 
 namespace VehicleRegistryAPI.Entities
 {
-    public class Car
+    public class Car : BaseEntity
     {
-        public int Id { get; set; }
         public string PlateNumber { get; set; }
         public string Brand { get; set; }
         public string Model { get; set; }
