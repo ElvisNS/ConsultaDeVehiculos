@@ -15,10 +15,5 @@ namespace VehicleRegistryAPI.Repositories.Implementations
             _dbcontext = context;
         }
 
-        public async Task<Car?> GetByPlateNumberAsync(string plateNumber)
-        {
-            return await _dbcontext.Cars
-                .FirstOrDefaultAsync(v => v.PlateNumber == plateNumber);
-        }
     }
 }

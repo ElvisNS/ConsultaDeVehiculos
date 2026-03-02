@@ -5,6 +5,6 @@ namespace VehicleRegistryAPI.Repositories.Interfaces
 {
     public interface IPersonRepository : IGenericRepository<Person>
     {
-        Task<Person?> GetByNationalIdAsync(string nationalId);
+
     }
 }

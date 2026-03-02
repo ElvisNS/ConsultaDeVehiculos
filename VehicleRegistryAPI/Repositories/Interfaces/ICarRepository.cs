@@ -5,6 +5,6 @@ namespace VehicleRegistryAPI.Repositories.Interfaces
 {
     public interface ICarRepository : IGenericRepository<Car>
     {
-        Task<Car?> GetByPlateNumberAsync(string plateNumber);
+
     }
 }

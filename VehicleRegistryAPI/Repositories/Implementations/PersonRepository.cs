@@ -14,10 +14,5 @@ namespace VehicleRegistryAPI.Repositories.Implementations
             _dbcontext = context;
         }
 
-        public async Task<Person?> GetByNationalIdAsync(string nationalId)
-        {
-            return await _dbcontext.Persons
-                .FirstOrDefaultAsync(p => p.NationalId == nationalId);
-        }
     }
 }
