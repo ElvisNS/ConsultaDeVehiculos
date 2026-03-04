@@ -2,6 +2,7 @@
 using VehicleRegistryAPI.DTOS;
 using VehicleRegistryAPI.DTOS.Persons;
 using VehicleRegistryAPI.Repositories.Interfaces;
+using VehicleRegistryAPI.Tools.Exceptions;
 
 namespace VehicleRegistryAPI.Services.Person
 {
@@ -49,7 +50,7 @@ namespace VehicleRegistryAPI.Services.Person
                 .GetFirstOrDefaultAsync(p => p.Id == id);
 
             if (person == null)
-                throw new Exception("Persona no encontrada");
+                throw new NotFoundException("Persona no encontrada");
 
             _mapper.Map(dto, person);
 
@@ -67,9 +68,14 @@ namespace VehicleRegistryAPI.Services.Person
                 );
 
             if (person == null)
-                throw new Exception("Persona no encontrada");
+                throw new NotFoundException("Persona no encontrada");
 
             return _mapper.Map<PersonResponseDto>(person);
+        }
+
+        public async Task<bool> ExistsByNationalIdAsync(string nationalId)
+        {
+            return await _personRepository.AnyAsync(p => p.NationalId == nationalId);
         }
 
         public async Task<PersonResponseDto> GetByNationalIdAsync(string nationalId)
@@ -81,7 +87,7 @@ namespace VehicleRegistryAPI.Services.Person
                 );
 
             if (person == null)
-                throw new Exception("Persona no encontrada");
+                throw new NotFoundException("Persona no encontrada");
 
             return _mapper.Map<PersonResponseDto>(person);
         }

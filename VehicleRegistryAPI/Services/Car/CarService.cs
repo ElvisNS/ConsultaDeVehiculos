@@ -2,6 +2,7 @@
 using VehicleRegistryAPI.DTOS;
 using VehicleRegistryAPI.DTOS.Cars;
 using VehicleRegistryAPI.Repositories.Interfaces;
+using VehicleRegistryAPI.Tools.Exceptions;
 
 namespace VehicleRegistryAPI.Services.Car
 {
@@ -43,7 +44,7 @@ namespace VehicleRegistryAPI.Services.Car
                 .GetFirstOrDefaultAsync(p => p.NationalId == dto.Cedula);
 
             if (person == null)
-                throw new Exception("Persona no encontrada");
+                throw new NotFoundException("Persona no encontrada");
 
             var car = _mapper.Map<VehicleRegistryAPI.Entities.Car>(dto);
             car.PersonId = person.Id;
@@ -58,13 +59,13 @@ namespace VehicleRegistryAPI.Services.Car
             var car = await _carRepository.GetFirstOrDefaultAsync(c => c.Id == id);
 
             if (car == null)
-                throw new Exception("Carro no encontrado");
+                throw new NotFoundException("Carro no encontrado");
 
             var person = await _personRepository
                 .GetFirstOrDefaultAsync(p => p.NationalId == dto.Cedula);
 
             if (person == null)
-                throw new Exception("Persona no encontrada");
+                throw new NotFoundException("Persona no encontrada");
 
             car.PersonId = person.Id;
 
@@ -73,7 +74,7 @@ namespace VehicleRegistryAPI.Services.Car
             return _mapper.Map<CarResponseDto>(car);
         }
 
-        public async Task<CarResponseDto?> GetByIdAsync(int id)
+        public async Task<CarResponseDto> GetByIdAsync(int id)
         {
             var car = await _carRepository.GetFirstOrDefaultAsync(
                 c => c.Id == id,
@@ -81,12 +82,17 @@ namespace VehicleRegistryAPI.Services.Car
             );
 
             if (car == null)
-                return null;
+                throw new NotFoundException("Carro no encontrado");
 
             return _mapper.Map<CarResponseDto>(car);
         }
 
-        public async Task<CarResponseDto?> GetByPlateNumberAsync(string plateNumber)
+        public async Task<bool> ExistsByPlateNumberAsync(string plateNumber)
+        {
+            return await _carRepository.AnyAsync(c => c.PlateNumber == plateNumber);
+        }
+
+        public async Task<CarResponseDto> GetByPlateNumberAsync(string plateNumber)
         {
             var car = await _carRepository.GetFirstOrDefaultAsync(
                 c => c.PlateNumber == plateNumber,
@@ -94,7 +100,7 @@ namespace VehicleRegistryAPI.Services.Car
             );
 
             if (car == null)
-                return null;
+                throw new NotFoundException("Carro no encontrada");
 
             return _mapper.Map<CarResponseDto>(car);
         }

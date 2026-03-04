@@ -74,6 +74,10 @@ namespace VehicleRegistryAPI.Repositories.Generics
             await _context.SaveChangesAsync(); 
         }
 
+        public async Task<bool> AnyAsync(Expression<Func<TEntity, bool>> predicate)
+        {
+            return await _dbSet.AnyAsync(predicate);
+        }
         //public async Task DeleteAsync(TEntity entity)
         //{
         //    _dbSet.Remove(entity);

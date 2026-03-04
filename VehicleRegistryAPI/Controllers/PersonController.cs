@@ -1,6 +1,8 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using FluentValidation;
+using Microsoft.AspNetCore.Mvc;
 using VehicleRegistryAPI.DTOS.Persons;
 using VehicleRegistryAPI.Services.Person;
+using VehicleRegistryAPI.Tools.Exceptions;
 
 namespace VehicleRegistryAPI.Controllers
 {
@@ -9,10 +11,15 @@ namespace VehicleRegistryAPI.Controllers
     public class PersonController : ControllerBase
     {
         private readonly IPersonService _personService;
-
-        public PersonController(IPersonService personService)
+        private readonly IValidator<CreatePersonDto> _createvalidator;
+        private readonly IValidator<UpdatePersonDto> _updateValidator;
+        public PersonController(IPersonService personService, 
+            IValidator<CreatePersonDto> createvalidator, 
+            IValidator<UpdatePersonDto> updatevalidator)
         {
             _personService = personService;
+            _createvalidator = createvalidator;
+            _updateValidator = updatevalidator;
         }
 
 
@@ -20,6 +27,11 @@ namespace VehicleRegistryAPI.Controllers
         [HttpPost]
         public async Task<IActionResult> Create(CreatePersonDto createPersonDto)
         {
+            var validationResult = await _createvalidator.ValidateAsync(createPersonDto);
+            if (!validationResult.IsValid)
+            {
+                return BadRequest(validationResult.Errors.Select(e => e.ErrorMessage));
+            }
             var createdPerson = await _personService.CreateAsync(createPersonDto);
             return Ok(createdPerson);
         }
@@ -27,6 +39,11 @@ namespace VehicleRegistryAPI.Controllers
         [HttpPut("Update/{id}")]
         public async Task<IActionResult> Update(int id, UpdatePersonDto updatePersonDto)
         {
+            var validationResult = await _updateValidator.ValidateAsync(updatePersonDto);
+            if (!validationResult.IsValid)
+            {
+                return BadRequest(validationResult.Errors.Select(e => e.ErrorMessage));
+            }
             var person = await _personService.GetByIdAsync(id);
             var UpdatedPerson = await _personService.UpdateAsync(person.Id, updatePersonDto);
             return Ok(UpdatedPerson);
