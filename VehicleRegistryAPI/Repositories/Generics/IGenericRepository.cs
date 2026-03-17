@@ -18,7 +18,5 @@ namespace VehicleRegistryAPI.Repositories.Generics
         Task AddAsync(TEntity entity);
         Task UpdateAsync(TEntity entity);
         Task<bool> AnyAsync(Expression<Func<TEntity, bool>> predicate);
-        //Task DeleteAsync(TEntity entity);
-
     }
 }

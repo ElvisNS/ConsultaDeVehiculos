@@ -1,6 +1,7 @@
 ﻿using AutoMapper;
 using VehicleRegistryAPI.DTOS;
 using VehicleRegistryAPI.DTOS.Cars;
+using VehicleRegistryAPI.DTOS.Persons;
 using VehicleRegistryAPI.Repositories.Interfaces;
 using VehicleRegistryAPI.Tools.Exceptions;
 
@@ -25,7 +26,7 @@ namespace VehicleRegistryAPI.Services.Car
         public async Task<PageResponse<CarResponseDto>> GetAllAsync(int page, int pageSize)
         {
             var (cars, totalRecords) = await _carRepository
-                .GetPagedAsync(page, pageSize, c => c.Persons);
+                .GetPagedAsync(page, pageSize,c => c.IsActive, c => c.Persons);
 
             var mappedCars = _mapper.Map<IEnumerable<CarResponseDto>>(cars);
 
@@ -101,6 +102,21 @@ namespace VehicleRegistryAPI.Services.Car
 
             if (car == null)
                 throw new NotFoundException("Carro no encontrada");
+
+            return _mapper.Map<CarResponseDto>(car);
+        }
+
+        public async Task<CarResponseDto> ToggleActive(int id)
+        {
+            var car = await _carRepository
+               .GetFirstOrDefaultAsync(c => c.Id == id);
+
+            if (car == null)
+                throw new NotFoundException("car not found");
+
+            car.IsActive = !car.IsActive;
+
+            await _carRepository.UpdateAsync(car);
 
             return _mapper.Map<CarResponseDto>(car);
         }

@@ -1,8 +1,14 @@
-﻿namespace VehicleRegistryAPI.Entities
+﻿using VehicleRegistryAPI.DTOS.Roles;
+using VehicleRegistryAPI.Entities;
+
+namespace VehicleRegistryAPI.DTOS.Users
 {
-    public class BaseEntity
+    public class UserResponseDto
     {
         public int Id { get; set; }
+        public string Email { get; set; }
+        public string UserName { get; set; }
+
         public DateTime CreatedAt { get; set; }
 
         public int? CreatedBy { get; set; }
@@ -15,6 +21,7 @@
 
         public int? DeactivatedBy { get; set; }
 
-        public bool IsActive { get; set; } = true;
+        public bool IsActive { get; set; }
+        public List<RoleDto> Roles { get; set; }
     }
 }

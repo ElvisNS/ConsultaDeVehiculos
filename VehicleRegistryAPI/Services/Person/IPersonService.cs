@@ -1,5 +1,4 @@
 ﻿using VehicleRegistryAPI.DTOS;
-using VehicleRegistryAPI.DTOS.Cars;
 using VehicleRegistryAPI.DTOS.Persons;
 
 namespace VehicleRegistryAPI.Services.Person
@@ -12,5 +11,6 @@ namespace VehicleRegistryAPI.Services.Person
         Task<PageResponse<PersonResponseDto>> GetAllAsync(int page, int pageSize);
         Task<bool> ExistsByNationalIdAsync(string nationalId);
         Task<PersonResponseDto> GetByNationalIdAsync(string nationalId);
+        Task<PersonResponseDto> ToggleActive(int id);
     }
 }

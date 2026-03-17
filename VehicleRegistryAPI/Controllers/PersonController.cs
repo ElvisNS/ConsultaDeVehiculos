@@ -62,18 +62,12 @@ namespace VehicleRegistryAPI.Controllers
             return Ok(result);
         }
 
-        [HttpGet("{id}")]
-        public async Task<IActionResult> GetById(int id)
+        [HttpPatch("{id}/deactivate")]
+        public async Task<IActionResult> Deactivate(int id)
         {
-            var person = await _personService.GetByIdAsync(id);
-            return Ok(person);
-        }
+            var result = await _personService.ToggleActive(id);
 
-        [HttpGet("by-nationalid/{nationalId}")]
-        public async Task<IActionResult> GetByNationalId(string nationalId)
-        {
-            var person = await _personService.GetByNationalIdAsync(nationalId);
-            return Ok(person);
+            return Ok(result);
         }
     }
 }

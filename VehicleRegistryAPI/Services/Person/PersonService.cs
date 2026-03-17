@@ -1,6 +1,8 @@
 ﻿using AutoMapper;
+using Microsoft.EntityFrameworkCore;
 using VehicleRegistryAPI.DTOS;
 using VehicleRegistryAPI.DTOS.Persons;
+using VehicleRegistryAPI.Entities;
 using VehicleRegistryAPI.Repositories.Interfaces;
 using VehicleRegistryAPI.Tools.Exceptions;
 
@@ -22,7 +24,7 @@ namespace VehicleRegistryAPI.Services.Person
         public async Task<PageResponse<PersonResponseDto>> GetAllAsync(int page, int pageSize)
         {
             var (persons, totalRecords) = await _personRepository
-                .GetPagedAsync(page, pageSize, p => p.Cars);
+                .GetPagedAsync(page, pageSize, p => p.IsActive, p => p.Cars); 
 
             var mappedPersons = _mapper.Map<IEnumerable<PersonResponseDto>>(persons);
 
@@ -88,6 +90,21 @@ namespace VehicleRegistryAPI.Services.Person
 
             if (person == null)
                 throw new NotFoundException("Persona no encontrada");
+
+            return _mapper.Map<PersonResponseDto>(person);
+        }
+
+        public async Task<PersonResponseDto> ToggleActive(int id)
+        {
+            var person = await _personRepository
+               .GetFirstOrDefaultAsync(p => p.Id == id);
+
+            if (person == null)
+                throw new NotFoundException("person not found");
+
+            person.IsActive = !person.IsActive;
+
+            await _personRepository.UpdateAsync(person);
 
             return _mapper.Map<PersonResponseDto>(person);
         }

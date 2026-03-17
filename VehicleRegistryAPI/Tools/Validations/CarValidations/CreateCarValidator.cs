@@ -4,7 +4,7 @@ using VehicleRegistryAPI.Services.Car;
 using VehicleRegistryAPI.Services.Person;
 using VehicleRegistryAPI.Tools.Validations.ValidationHelpers;
 
-namespace VehicleRegistryAPI.Tools.Validations
+namespace VehicleRegistryAPI.Tools.Validations.CarValidations
 {
     public class CreateCarValidator : AbstractValidator<CreateCarDto>
     {

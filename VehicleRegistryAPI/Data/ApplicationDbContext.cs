@@ -1,4 +1,5 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using System.Data;
 using VehicleRegistryAPI.Entities;
 
 namespace VehicleRegistryAPI.Data
@@ -10,10 +11,11 @@ namespace VehicleRegistryAPI.Data
         public DbSet<Person> Persons { get; set; }
         public DbSet<Car> Cars { get; set; }
         public DbSet<User> Users { get; set; }
+        public DbSet<Roles> Roles { get; set; }
+        public DbSet<UserRoles> UserRoles { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
-
             #region Property Configuration
 
             #region User
@@ -24,16 +26,61 @@ namespace VehicleRegistryAPI.Data
 
                 entity.HasKey(u => u.Id);
 
+                entity.Property(u => u.Email)
+                      .IsRequired()
+                      .HasMaxLength(100);
+
                 entity.Property(u => u.UserName)
                       .IsRequired()
                       .HasMaxLength(50);
 
                 entity.Property(u => u.PasswordHash)
                       .IsRequired();
+
+                entity.Property(u => u.IsActive)
+                      .HasDefaultValue(true);
+
+                entity.Property(u => u.CreatedAt)
+                      .IsRequired();
             });
 
             #endregion
 
+            #region Role
+
+            modelBuilder.Entity<Roles>(entity =>
+            {
+                entity.ToTable("Roles");
+
+                entity.HasKey(r => r.Id);
+
+                entity.Property(r => r.Name)
+                      .IsRequired()
+                      .HasMaxLength(50);
+            });
+
+            #endregion
+
+            #region UserRoles
+
+            modelBuilder.Entity<UserRoles>(entity =>
+            {
+                entity.ToTable("UserRoles");
+
+                entity.HasKey(ur => new { ur.UserId, ur.RoleId });
+
+                entity.HasOne(ur => ur.Users)
+                      .WithMany(u => u.UserRoless)
+                      .HasForeignKey(ur => ur.UserId)
+                      .OnDelete(DeleteBehavior.Cascade);
+
+                entity.HasOne(ur => ur.Role)
+                      .WithMany(r => r.UserRoless)
+                      .HasForeignKey(ur => ur.RoleId)
+                      .OnDelete(DeleteBehavior.Cascade);
+            });
+
+            #endregion
 
             #region Person
 
@@ -54,10 +101,16 @@ namespace VehicleRegistryAPI.Data
                 // NationalId único
                 entity.HasIndex(p => p.NationalId)
                       .IsUnique();
+
+                entity.Property(p => p.CreatedAt)
+                       .IsRequired();
+
+                entity.Property(p => p.UpdatedAt);
+
+                entity.Property(p => p.DeactivatedAt);
             });
 
             #endregion
-
 
             #region Car
 
@@ -70,6 +123,8 @@ namespace VehicleRegistryAPI.Data
                 entity.Property(c => c.PlateNumber)
                       .IsRequired()
                       .HasMaxLength(20);
+                entity.HasIndex(c => c.PlateNumber)
+                       .IsUnique();  
 
                 entity.Property(c => c.Brand)
                       .IsRequired()
@@ -83,16 +138,20 @@ namespace VehicleRegistryAPI.Data
                 entity.HasOne(c => c.Persons)// Un carro tiene UNA persona
                       .WithMany(p => p.Cars)// Una persona tiene MUCHOS carros
                       .HasForeignKey(c => c.PersonId)
-                      .OnDelete(DeleteBehavior.Cascade);
+                      .OnDelete(DeleteBehavior.Restrict);
 
-                entity.HasIndex(c => c.PlateNumber)
-                      .IsUnique();
+                entity.Property(c => c.CreatedAt)
+                       .IsRequired();
+
+                entity.Property(c => c.UpdatedAt);
+
+                entity.Property(c => c.DeactivatedAt);
             });
 
             #endregion
-        }
 
             #endregion
+        }
 
     }
 }

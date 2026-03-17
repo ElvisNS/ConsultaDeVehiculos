@@ -51,6 +51,7 @@ namespace VehicleRegistryAPI.Controllers
             var UpdatedCar = await _carService.UpdateAsync(car.Id, updateCarDto);
             return Ok(UpdatedCar);
         }
+
         [HttpGet]
         public async Task<IActionResult> GetAll(
             [FromQuery] int page = 1,
@@ -64,23 +65,13 @@ namespace VehicleRegistryAPI.Controllers
             return Ok(result);
         }
 
-        [HttpGet("{id}")]
-        public async Task<IActionResult> GetById(int id)
+        [HttpPatch("{id}/deactivate")]
+        public async Task<IActionResult> Deactivate(int id)
         {
-            var cars = await _carService.GetByIdAsync(id);
-            return Ok(cars);
+            var result = await _carService.ToggleActive(id);
+
+            return Ok(result);
         }
 
-        // ✅ GET: api/cars/by-plate/A123456
-        [HttpGet("by-plate/{plate}")]
-        public async Task<IActionResult> GetByPlate(string plate)
-        {
-            var car = await _carService.GetByPlateNumberAsync(plate);
-
-            if (car == null)
-                return NotFound("Carro no encontrado");
-
-            return Ok(car);
-        }
     }
 }

@@ -3,7 +3,7 @@ using VehicleRegistryAPI.DTOS.Cars;
 using VehicleRegistryAPI.Services.Person;
 using VehicleRegistryAPI.Tools.Validations.ValidationHelpers;
 
-namespace VehicleRegistryAPI.Tools.Validations
+namespace VehicleRegistryAPI.Tools.Validations.CarValidations
 {
     public class UpdateCarValidator : AbstractValidator<UpdateCarDto>
     {

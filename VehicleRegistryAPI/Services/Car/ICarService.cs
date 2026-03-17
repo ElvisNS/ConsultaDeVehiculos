@@ -1,6 +1,5 @@
 ﻿using VehicleRegistryAPI.DTOS;
 using VehicleRegistryAPI.DTOS.Cars;
-using VehicleRegistryAPI.DTOS.Persons;
 
 namespace VehicleRegistryAPI.Services.Car
 {
@@ -15,6 +14,8 @@ namespace VehicleRegistryAPI.Services.Car
         Task<bool> ExistsByPlateNumberAsync(string plateNumber);
 
         Task<PageResponse<CarResponseDto>> GetAllAsync(int page, int pageSize);
+
+        Task<CarResponseDto> ToggleActive(int id);
 
     }
 }
