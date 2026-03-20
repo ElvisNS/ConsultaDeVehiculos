@@ -52,7 +52,14 @@ namespace VehicleRegistryAPI.Services.Auth
                     throw new UnauthorizedException("Credenciales inválidas");
                 }
 
-                // 3. Generar token
+                // 3. Verificar si el usuario está activo
+                if (!user.IsActive)
+                {
+                    _logger.LogWarning("Inicio de sesión fallido: usuario con email {Email} no activo", dto.Email);
+                    throw new UnauthorizedException("Credenciales inválidas");
+                }
+
+                // 4. Generar token
                 var token = _tokenService.GenerateAccessToken(user);
                 var expiration = DateTime.UtcNow.AddMinutes(_jwtSettings.ExpirationMinutes);
 

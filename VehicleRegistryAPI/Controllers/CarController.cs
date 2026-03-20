@@ -2,6 +2,7 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Logging;
 using VehicleRegistryAPI.DTOS.Cars;
 using VehicleRegistryAPI.DTOS.Persons;
 using VehicleRegistryAPI.Services.Car;
@@ -17,14 +18,16 @@ namespace VehicleRegistryAPI.Controllers
         private readonly ICarService _carService;
         private readonly IValidator<CreateCarDto> _carCreateValidator;
         private readonly IValidator<UpdateCarDto> _carUpdateValidator;
+        private readonly ILogger<CarController> _logger;
         public CarController(ICarService carService, 
             IValidator<CreateCarDto> createValidator, 
-            IValidator<UpdateCarDto> updateValidator)
+            IValidator<UpdateCarDto> updateValidator,
+            ILogger<CarController> logger)
         {
             _carService = carService;
             _carCreateValidator = createValidator;
             _carUpdateValidator = updateValidator;
-
+            _logger = logger;
         }
 
         [Authorize(Roles = "Admin, Operator")]
@@ -34,9 +37,11 @@ namespace VehicleRegistryAPI.Controllers
             var validationResult = await _carCreateValidator.ValidateAsync(createCarDto);
             if (!validationResult.IsValid)
             {
+                _logger.LogWarning("Fallo la validacion al crear vehiculo");
                 return BadRequest(validationResult.Errors.Select(e => e.ErrorMessage));
             }
             var createdCar = await _carService.CreateAsync(createCarDto);
+            _logger.LogInformation("Vehiculo creado con ID: {CarId}", createdCar.Id);
             return Ok(createdCar);
         }
 
@@ -49,10 +54,12 @@ namespace VehicleRegistryAPI.Controllers
             var validationResult = await _carUpdateValidator.ValidateAsync(updateCarDto);
             if (!validationResult.IsValid)
             {
+                _logger.LogWarning("Fallo la validacion al actualizar vehiculo con ID: {CarId}", id);
                 return BadRequest(validationResult.Errors.Select(e => e.ErrorMessage));
             }
 
             var UpdatedCar = await _carService.UpdateAsync(car.Id, updateCarDto);
+            _logger.LogInformation("Vehiculo actualizado con ID: {CarId}", id);
             return Ok(UpdatedCar);
         }
 
@@ -66,6 +73,7 @@ namespace VehicleRegistryAPI.Controllers
             if (pageSize <= 0 || pageSize > 100) pageSize = 5;
 
             var result = await _carService.GetAllAsync(page, pageSize);
+            _logger.LogInformation("GetAll vehiculos llamado - Pagina: {Page}, TamanoPagina: {PageSize}", page, pageSize);
 
             return Ok(result);
         }
@@ -75,6 +83,7 @@ namespace VehicleRegistryAPI.Controllers
         public async Task<IActionResult> Deactivate(int id)
         {
             var result = await _carService.ToggleActive(id);
+            _logger.LogInformation("Vehiculo desactivado con ID: {CarId}", id);
 
             return Ok(result);
         }

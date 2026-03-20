@@ -16,7 +16,7 @@ namespace VehicleRegistryAPI.Tools.Validations.CarValidations
 
             RuleFor(x => x.Cedula)
              .NotEmpty()
-             .Must(Helpers.IsValidNationalId)
+             .Must(HelpersValidate.IsValidNationalId)
              .WithMessage("{PropertyName} debe tener el formato 000-0000000-0")
              .MustAsync(PersonMustExist)
              .WithMessage("{PropertyName} no existe");

@@ -5,6 +5,7 @@ using VehicleRegistryAPI.Repositories.Interfaces;
 using VehicleRegistryAPI.Services.Users;
 using VehicleRegistryAPI.Tools.Exceptions;
 using VehicleRegistryAPI.Tools.Security;
+using ConflictException = VehicleRegistryAPI.Tools.Exceptions.ConflictException;
 
 public class UserService : IUserService
 {
@@ -27,15 +28,19 @@ public class UserService : IUserService
 
     public async Task<UserResponseDto> AddUser(CreateUserDto dto)
     {
-        // Log de inicio
         _logger.LogInformation("Intentando crear usuario con email {Email}", dto.Email);
+
+        if (await _userRepository.ExistsByEmailAsync(dto.Email))
+        {
+            _logger.LogWarning("Ya existe un usuario con el email {Email}", dto.Email);
+            throw new ConflictException($"Ya existe un usuario registrado con el email {dto.Email}");
+        }
 
         var user = _mapper.Map<User>(dto);
         user.PasswordHash = _passwordHasher.HashPassword(dto.Password);
 
         await _userRepository.AddAsync(user);
 
-        // Log de éxito
         _logger.LogInformation("Usuario creado con ID {UserId} y email {Email}", user.Id, user.Email);
 
         return _mapper.Map<UserResponseDto>(user);

@@ -22,12 +22,12 @@ namespace VehicleRegistryAPI.Tools.Validations.CarValidations
                 .NotEmpty()
                 .MaximumLength(7)
                 .MustAsync(BeUniquePlateNumber).WithMessage("{PropertyName} Ya existe")
-                .Must(Helpers.IsValidPlate)
+                .Must(HelpersValidate.IsValidPlate)
                 .WithMessage("{PropertyName} debe tener el formato $000000 Ejemplo A123456");
 
             RuleFor(x => x.Cedula)
              .NotEmpty()
-             .Must(Helpers.IsValidNationalId)
+             .Must(HelpersValidate.IsValidNationalId)
              .WithMessage("{PropertyName} debe tener el formato 000-0000000-0")
              .MustAsync(PersonMustExist)
              .WithMessage("{PropertyName} no existe");
@@ -37,7 +37,7 @@ namespace VehicleRegistryAPI.Tools.Validations.CarValidations
                 .WithMessage("{PropertyName} No puede estar vacia")
                 .MinimumLength(3)
                 .MaximumLength (10)
-                .Must(Helpers.IsValidName).WithMessage("{PropertyName} solo acepta letras");
+                .Must(HelpersValidate.IsValidName).WithMessage("{PropertyName} solo acepta letras");
 
             RuleFor(x => x.Brand)
                 .NotEmpty()

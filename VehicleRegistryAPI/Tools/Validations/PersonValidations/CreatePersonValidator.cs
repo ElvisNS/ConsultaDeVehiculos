@@ -16,7 +16,7 @@ namespace VehicleRegistryAPI.Tools.Validations.PersonValidations
             RuleFor(x => x.NationalId)
                 .NotEmpty()
                 .MaximumLength(13)
-                .Must(Helpers.IsValidNationalId)
+                .Must(HelpersValidate.IsValidNationalId)
                 .WithMessage("{PropertyName} debe tener el formato 000-0000000-0")
                 .MustAsync(BeUniqueNationalId)
                 .WithMessage("{PropertyName} ya existe");
@@ -24,7 +24,7 @@ namespace VehicleRegistryAPI.Tools.Validations.PersonValidations
                 .NotEmpty()
                 .MinimumLength(3)
                 .MaximumLength(20)
-                .Must(Helpers.IsValidName).WithMessage("{PropertyName} deben ser todas letras");
+                .Must(HelpersValidate.IsValidName).WithMessage("{PropertyName} deben ser todas letras");
 
         }
         private async Task<bool> BeUniqueNationalId(string nationalId, CancellationToken cancellationToken)

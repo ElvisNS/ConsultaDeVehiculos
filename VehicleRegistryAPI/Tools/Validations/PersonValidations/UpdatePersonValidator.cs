@@ -11,7 +11,7 @@ namespace VehicleRegistryAPI.Tools.Validations.PersonValidations
             RuleFor(x => x.FullName).NotEmpty()
                 .MinimumLength(3)
                 .MaximumLength(20)
-                .Must(Helpers.IsValidName).WithMessage("{PropertyName} deben ser todas letras");
+                .Must(HelpersValidate.IsValidName).WithMessage("{PropertyName} deben ser todas letras");
         }
     }
 }

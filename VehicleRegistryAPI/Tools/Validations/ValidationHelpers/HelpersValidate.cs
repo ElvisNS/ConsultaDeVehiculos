@@ -2,7 +2,7 @@
 
 namespace VehicleRegistryAPI.Tools.Validations.ValidationHelpers
 {
-    public class Helpers
+    public class HelpersValidate
     {
         public static bool IsValidName(string name)
         {
