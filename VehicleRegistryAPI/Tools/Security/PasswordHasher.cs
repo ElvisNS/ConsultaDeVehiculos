@@ -3,10 +3,10 @@ using System.Security.Cryptography;
 
 namespace VehicleRegistryAPI.Tools.Security
 {
-    public class PasswordHasher
+    public class PasswordHasher : IPasswordHasher
     {
         // Genera un hash seguro para la contraseña
-        public static string HashPassword(string password)
+        public string HashPassword(string password)
         {
             // Generar un salt aleatorio de 128 bits (16 bytes)
             byte[] salt = new byte[16];
@@ -32,7 +32,7 @@ namespace VehicleRegistryAPI.Tools.Security
         }
 
         // Verifica si la contraseña coincide con el hash almacenado
-        public static bool VerifyPassword(string password, string storedHash)
+        public  bool VerifyPassword(string password, string storedHash)
         {
             var parts = storedHash.Split('.');
             if (parts.Length != 2) return false;

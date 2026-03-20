@@ -1,4 +1,5 @@
 ﻿using FluentValidation;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using VehicleRegistryAPI.DTOS.Persons;
 using VehicleRegistryAPI.Services.Person;
@@ -6,6 +7,7 @@ using VehicleRegistryAPI.Tools.Exceptions;
 
 namespace VehicleRegistryAPI.Controllers
 {
+    [Authorize]
     [ApiController]
     [Route("api/[controller]")]
     public class PersonController : ControllerBase
@@ -24,6 +26,7 @@ namespace VehicleRegistryAPI.Controllers
 
 
 
+        [Authorize(Roles = "Admin, Operator")]
         [HttpPost]
         public async Task<IActionResult> Create(CreatePersonDto createPersonDto)
         {
@@ -36,6 +39,7 @@ namespace VehicleRegistryAPI.Controllers
             return Ok(createdPerson);
         }
 
+        [Authorize(Roles = "Admin, Operator")]
         [HttpPut("Update/{id}")]
         public async Task<IActionResult> Update(int id, UpdatePersonDto updatePersonDto)
         {
@@ -49,6 +53,7 @@ namespace VehicleRegistryAPI.Controllers
             return Ok(UpdatedPerson);
         }
 
+        [Authorize(Roles = "Admin, Operator")]
         [HttpGet]
         public async Task<IActionResult> GetAll(
             [FromQuery] int page = 1,
@@ -62,6 +67,7 @@ namespace VehicleRegistryAPI.Controllers
             return Ok(result);
         }
 
+        [Authorize(Roles = "Admin, Operator")]
         [HttpPatch("{id}/deactivate")]
         public async Task<IActionResult> Deactivate(int id)
         {

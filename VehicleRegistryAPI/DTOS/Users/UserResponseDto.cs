@@ -22,6 +22,6 @@ namespace VehicleRegistryAPI.DTOS.Users
         public int? DeactivatedBy { get; set; }
 
         public bool IsActive { get; set; }
-        public List<RoleDto> Roles { get; set; }
+        public string? RoleName { get; set; }
     }
 }

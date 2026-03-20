@@ -1,5 +1,7 @@
 ﻿using FluentValidation;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using System.Security.Claims;
 using VehicleRegistryAPI.DTOS.Roles;
 using VehicleRegistryAPI.DTOS.Users;
 using VehicleRegistryAPI.Services.Roles;
@@ -7,6 +9,7 @@ using VehicleRegistryAPI.Services.Users;
 
 namespace VehicleRegistryAPI.Controllers
 {
+    [Authorize]
     [Route("api/[controller]")]
     [ApiController]
     public class UserController : ControllerBase
@@ -23,6 +26,8 @@ namespace VehicleRegistryAPI.Controllers
             _updateValidator = updateValidator;
         }
 
+
+        [Authorize]
         [HttpPut("Update/{id}")]
         public async Task<IActionResult> Update(int id, UpdateUserDto updateUserDto)
         {
@@ -32,12 +37,20 @@ namespace VehicleRegistryAPI.Controllers
             {
                 return BadRequest(validationResult.Errors.Select(e => e.ErrorMessage));
             }
+
+            var currentUserId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier).Value);
+            var isAdmin = User.IsInRole("Admin");
+            if (!isAdmin && currentUserId != id)
+            {
+                return Forbid("No tienes permiso para editar este usuario");
+            }
+
             var users = await _userService.GetById(id);
             var UpdatedUsers = await _userService.UpdateUser(users.Id, updateUserDto);
             return Ok(UpdatedUsers);
         }
 
-
+        [Authorize(Roles = "Admin")]
         [HttpPatch("{id}/deactivate")]
         public async Task<IActionResult> Deactivate(int id)
         {
@@ -46,6 +59,7 @@ namespace VehicleRegistryAPI.Controllers
             return Ok(result);
         }
 
+        [Authorize(Roles = "Admin")]
         [HttpGet]
         public async Task<IActionResult> GetAllUser()
         {
@@ -53,14 +67,22 @@ namespace VehicleRegistryAPI.Controllers
             return Ok(users);
         }
 
+        [Authorize]
         [HttpGet("id")]
         public async Task<IActionResult> GetById(int id)
         {
+            var currentUserId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier).Value);
+            var isAdmin = User.IsInRole("Admin");
+
+            if (!isAdmin && currentUserId != id)
+            {
+                return Forbid("No tienes permiso para ver este usuario");
+            }
             var users = await _userService.GetById(id);
             return Ok(users);
         }
 
-
+        [Authorize(Roles = "Admin")]
         [HttpPost]
         public async Task<IActionResult> CreateUser(CreateUserDto createUserDto)
         {
@@ -74,6 +96,7 @@ namespace VehicleRegistryAPI.Controllers
             return Ok(createUser);
         }
 
+        [Authorize(Roles = "Admin")]
         [HttpPost("assign")]
         public async Task<IActionResult> AssignRoles(AssignRolesDto dto)
         {

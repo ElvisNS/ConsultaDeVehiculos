@@ -14,21 +14,23 @@ namespace VehicleRegistryAPI.Repositories.Implementations
             _context = context;
         }
 
-        public async Task<IEnumerable<UserRoles>> GetByUserIdAsync(int userId)
+        // Obtiene el rol de un usuario (ahora es uno solo)
+        public async Task<UserRoles?> GetByUserIdAsync(int userId)
         {
             return await _context.Set<UserRoles>()
-                                 .Where(ur => ur.UserId == userId)
-                                 .ToListAsync();
+                                 .FirstOrDefaultAsync(ur => ur.UserId == userId);
         }
 
-        public async Task AddRangeAsync(IEnumerable<UserRoles> userRoles)
+        // Agrega una asignación de rol (una sola)
+        public async Task AddAsync(UserRoles userRole)
         {
-            await _context.Set<UserRoles>().AddRangeAsync(userRoles);
+            await _context.Set<UserRoles>().AddAsync(userRole);
         }
 
-        public void RemoveRange(IEnumerable<UserRoles> userRoles)
+        // Elimina una asignación de rol
+        public void Remove(UserRoles userRole)
         {
-            _context.Set<UserRoles>().RemoveRange(userRoles);
+            _context.Set<UserRoles>().Remove(userRole);
         }
 
         public async Task SaveChangesAsync()
@@ -41,12 +43,10 @@ namespace VehicleRegistryAPI.Repositories.Implementations
             return await _context.Users.AnyAsync(u => u.Id == userId);
         }
 
-        public async Task<IEnumerable<int>> GetExistingRoleIdsAsync(IEnumerable<int> roleIds)
+        // Nuevo: verifica si un rol existe
+        public async Task<bool> RoleExistsAsync(int roleId)
         {
-            return await _context.Roles
-                .Where(r => roleIds.Contains(r.Id))
-                .Select(r => r.Id)
-                .ToListAsync();
+            return await _context.Roles.AnyAsync(r => r.Id == roleId);
         }
     }
 }

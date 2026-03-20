@@ -4,11 +4,11 @@ namespace VehicleRegistryAPI.Repositories.Interfaces
 {
     public interface IRolesRepository
     {
-        Task<IEnumerable<UserRoles>> GetByUserIdAsync(int userId);
-        Task AddRangeAsync(IEnumerable<UserRoles> userRoles);
-        void RemoveRange(IEnumerable<UserRoles> userRoles);
+        Task<UserRoles?> GetByUserIdAsync(int userId);
+        Task AddAsync(UserRoles userRole);
+        void Remove(UserRoles userRole);
         Task SaveChangesAsync();
         Task<bool> UserExistsAsync(int userId);
-        Task<IEnumerable<int>> GetExistingRoleIdsAsync(IEnumerable<int> roleIds);
+        Task<bool> RoleExistsAsync(int roleId);
     }
 }

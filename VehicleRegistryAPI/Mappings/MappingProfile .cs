@@ -30,16 +30,12 @@ namespace VehicleRegistryAPI.Mappings
             CreateMap<UpdateCarDto, Car>();
 
 
-            CreateMap<Roles, RoleDto>();
-
             // User
             CreateMap<CreateUserDto, User>();
             CreateMap<UpdateUserDto, User>();
             CreateMap<User, UserResponseDto>()
-                 .ForMember(
-                    dest => dest.Roles,
-                    opt => opt.MapFrom(src =>
-                        src.UserRoless.Select(ur => ur.Role))); // Aquí la magia
+                 .ForMember(dest => dest.RoleName, opt => opt.MapFrom(src =>
+                    src.UserRoless.FirstOrDefault().Role.Name));
         }
     }
 }

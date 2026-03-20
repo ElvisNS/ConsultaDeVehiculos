@@ -7,44 +7,68 @@ namespace VehicleRegistryAPI.Services.Roles
     public class RoleService : IRoleService
     {
         private readonly IRolesRepository _rolesRepository;
-        public RoleService(IRolesRepository rolesRepository) 
+        private readonly ILogger<RoleService> _logger;
+        public RoleService(IRolesRepository rolesRepository, ILogger<RoleService> logger) 
         {
             _rolesRepository = rolesRepository;
+            _logger = logger;
         }
 
         public async Task AssignRolesToUserAsync(AssignRolesDto dto)
         {
-            // 1. Validar que el usuario existe
-            var userExists = await _rolesRepository.UserExistsAsync(dto.UserId);
-            if (!userExists)
-                throw new Exception($"El usuario con ID {dto.UserId} no existe.");
+            _logger.LogInformation("Asignando rol {RoleId} al usuario {UserId}", dto.RoleId, dto.UserId);
 
-            // 2. Validar que todos los roles existen
-            var existingRoleIds = await _rolesRepository.GetExistingRoleIdsAsync(dto.RoleIds);
-            var missingRoles = dto.RoleIds.Except(existingRoleIds).ToList();
-            if (missingRoles.Any())
-                throw new Exception($"Los siguientes roles no existen: {string.Join(", ", missingRoles)}");
+            try
+            {
+                    // 1. Validar que el usuario existe
+                    var userExists = await _rolesRepository.UserExistsAsync(dto.UserId);
+                    if (!userExists)
+                    {
+                        _logger.LogWarning("Usuario {UserId} no encontrado", dto.UserId);
+                        throw new Exception($"El usuario con ID {dto.UserId} no existe.");
+                    }
 
-            // 3. Obtener roles actuales del usuario
-            var currentUserRoles = await _rolesRepository.GetByUserIdAsync(dto.UserId);
-            var currentRoleIds = currentUserRoles.Select(ur => ur.RoleId).ToList();
+                    // 2. Validar que el rol existe
+                    var roleExists = await _rolesRepository.RoleExistsAsync(dto.RoleId);
+                    if (!roleExists)
+                    {
+                        _logger.LogWarning("Rol {RoleId} no encontrado", dto.RoleId);
+                        throw new Exception($"El rol con ID {dto.RoleId} no existe.");
+                    }
 
-            // 4. Eliminar roles que ya no están en la nueva lista
-            var rolesToRemove = currentUserRoles.Where(ur => !dto.RoleIds.Contains(ur.RoleId)).ToList();
-            if (rolesToRemove.Any())
-                _rolesRepository.RemoveRange(rolesToRemove);
+                    // 3. Obtener el rol actual del usuario (si tiene)
+                    var currentRole = await _rolesRepository.GetByUserIdAsync(dto.UserId);
 
-            // 5. Agregar nuevos roles que no tenía
-            var rolesToAdd = dto.RoleIds
-                .Where(roleId => !currentRoleIds.Contains(roleId))
-                .Select(roleId => new UserRoles { UserId = dto.UserId, RoleId = roleId })
-                .ToList();
+                    if (currentRole != null)
+                    {
+                        // Si ya tiene el mismo rol, no hacemos nada
+                        if (currentRole.RoleId == dto.RoleId)
+                        {
+                            _logger.LogInformation("El usuario {UserId} ya tiene el rol {RoleId}. No se requieren cambios.",
+                                dto.UserId, dto.RoleId);
+                            return;
+                        }
 
-            if (rolesToAdd.Any())
-                await _rolesRepository.AddRangeAsync(rolesToAdd);
+                        // Si tiene un rol diferente, lo eliminamos
+                        _logger.LogInformation("Eliminando rol anterior {OldRoleId} del usuario {UserId}",
+                            currentRole.RoleId, dto.UserId);
+                        _rolesRepository.Remove(currentRole);
+                    }
 
-            // 6. Guardar cambios
-            await _rolesRepository.SaveChangesAsync();
+                    // 4. Asignar el nuevo rol
+                    var newUserRole = new UserRoles { UserId = dto.UserId, RoleId = dto.RoleId };
+                    await _rolesRepository.AddAsync(newUserRole);
+                    await _rolesRepository.SaveChangesAsync();
+
+                    _logger.LogInformation("Rol {RoleId} asignado correctamente al usuario {UserId}",
+                        dto.RoleId, dto.UserId);
+            }
+            catch (Exception ex)
+            {
+               _logger.LogError(ex, "Error al asignar rol al usuario {UserId}", dto.UserId);
+               throw;
+            }
+                
         }
     }
 }

@@ -9,9 +9,11 @@ namespace VehicleRegistryAPI.Tools.Validations.AuthValidations
     public class AuthValidator : AbstractValidator<LoginDto>
     {
         private readonly IUserRepository _userRepository;
-        public AuthValidator(IUserRepository userRepositor) 
+        private readonly IPasswordHasher _passwordHasher;
+        public AuthValidator(IUserRepository userRepositor, IPasswordHasher passwordHasher ) 
         {
             _userRepository = userRepositor;
+            _passwordHasher = passwordHasher;
 
             RuleFor(x => x.Email)
            .NotEmpty().WithMessage("El email es requerido")
@@ -35,7 +37,7 @@ namespace VehicleRegistryAPI.Tools.Validations.AuthValidations
             if (user == null)
                 return false;
 
-            return PasswordHasher.VerifyPassword(dto.Password, user.PasswordHash);
+            return _passwordHasher.VerifyPassword(dto.Password, user.PasswordHash);
         }
 
         private async Task<bool> UserIsActive(LoginDto dto, CancellationToken cancellationToken)

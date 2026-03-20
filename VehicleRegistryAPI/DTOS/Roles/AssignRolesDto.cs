@@ -8,6 +8,6 @@ namespace VehicleRegistryAPI.DTOS.Roles
         public int UserId { get; set; }
 
         [Required]
-        public List<int> RoleIds { get; set; } = new List<int>();
+        public int RoleId { get; set; }
     }
 }

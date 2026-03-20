@@ -28,6 +28,7 @@ namespace VehicleRegistryAPI.Tools.MIddleware
             // 2) Map exception → HTTP status + title/type
             var (status, title) = exception switch
             {
+                UnauthorizedException => (StatusCodes.Status401Unauthorized, "No autorizado"),
                 NotFoundException => (StatusCodes.Status404NotFound, "Resource Not Found"),
                 ValidationException => (StatusCodes.Status400BadRequest, "Invalid Request"),
                 _ => (StatusCodes.Status500InternalServerError, "Server Error")

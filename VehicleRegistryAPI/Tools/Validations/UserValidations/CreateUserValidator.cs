@@ -19,11 +19,15 @@ namespace VehicleRegistryAPI.Tools.Validations.UserValidations
 
             RuleFor(x => x.UserName)
                 .NotEmpty().WithMessage("El username es requerido")
-                .MinimumLength(3);
+                .MinimumLength(3)
+                .MaximumLength(50)
+                .Matches(@"^[a-zA-Z0-9_]+$").WithMessage("Solo letras, números y guión bajo");
 
             RuleFor(x => x.Password)
                 .NotEmpty().WithMessage("La contraseña es requerida")
-                .MinimumLength(6);
+                .MinimumLength(6)
+                .Matches(@"[A-Z]").WithMessage("Debe contener al menos una mayúscula")
+                .Matches(@"[0-9]").WithMessage("Debe contener al menos un número");
         }
         private async Task<bool> BeUniqueEmail(string email, CancellationToken cancellationToken)
         {

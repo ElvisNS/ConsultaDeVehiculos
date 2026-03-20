@@ -1,5 +1,6 @@
 using FluentValidation;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using System.Security.Claims;
@@ -21,10 +22,12 @@ using VehicleRegistryAPI.Services.Person;
 using VehicleRegistryAPI.Services.Roles;
 using VehicleRegistryAPI.Services.Users;
 using VehicleRegistryAPI.Tools.MIddleware;
+using VehicleRegistryAPI.Tools.Security;
 using VehicleRegistryAPI.Tools.Validations.AuthValidations;
 using VehicleRegistryAPI.Tools.Validations.CarValidations;
 using VehicleRegistryAPI.Tools.Validations.PersonValidations;
 using VehicleRegistryAPI.Tools.Validations.UserValidations;
+using VehicleRegistryAPI.Tools.Helpers;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -37,6 +40,13 @@ if (jwtSettings == null || string.IsNullOrEmpty(jwtSettings.Key))
 {
     throw new InvalidOperationException("JwtSettings no está configurado correctamente en appsettings.json");
 }
+
+// Validar longitud de la clave (mínimo 32 caracteres para HMAC-SHA256)
+if (jwtSettings.Key.Length < 32)
+{
+    throw new InvalidOperationException("JwtSettings.Key debe tener al menos 32 caracteres (256 bits) para seguridad adecuada.");
+}
+
 builder.Services.Configure<JwtSettings>(builder.Configuration.GetSection("JwtSettings"));
 
 // ===== 2. Configurar autenticación JWT Bearer =====
@@ -56,8 +66,52 @@ builder.Services.AddAuthentication(options =>
         ValidIssuer = jwtSettings.Issuer,
         ValidAudience = jwtSettings.Audience,
         IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtSettings.Key)),
-        NameClaimType = ClaimTypes.NameIdentifier,  // Para que User.Identity.Name sea el Id
-        RoleClaimType = ClaimTypes.Role             // Para que User.IsInRole() funcione
+        NameClaimType = ClaimTypes.NameIdentifier,
+        RoleClaimType = ClaimTypes.Role
+    };
+
+    options.Events = new JwtBearerEvents
+    {
+        OnChallenge = async context =>
+        {
+            context.HandleResponse();
+
+            // Obtener logger para auditoría
+            var logger = context.HttpContext.RequestServices.GetRequiredService<ILogger<Program>>();
+            logger.LogWarning("Intento de acceso no autorizado a {Path}. TraceId: {TraceId}",
+                context.HttpContext.Request.Path, context.HttpContext.TraceIdentifier);
+
+            var problem = ProblemDetailsHelper.Create(
+                context.HttpContext,
+                StatusCodes.Status401Unauthorized,
+                "Unauthorized",
+                "No estás autenticado o el token es inválido"
+            );
+
+            context.Response.StatusCode = 401;
+            context.Response.ContentType = "application/json";
+            await context.Response.WriteAsJsonAsync(problem);
+        },
+
+        OnForbidden = async context =>
+        {
+            var logger = context.HttpContext.RequestServices.GetRequiredService<ILogger<Program>>();
+            logger.LogWarning("Acceso prohibido a {Path} para el usuario {User}. TraceId: {TraceId}",
+                context.HttpContext.Request.Path,
+                context.HttpContext.User?.Identity?.Name ?? "unknown",
+                context.HttpContext.TraceIdentifier);
+
+            var problem = ProblemDetailsHelper.Create(
+                context.HttpContext,
+                StatusCodes.Status403Forbidden,
+                "Forbidden",
+                "No tienes permisos para acceder a este recurso"
+            );
+
+            context.Response.StatusCode = 403;
+            context.Response.ContentType = "application/json";
+            await context.Response.WriteAsJsonAsync(problem);
+        }
     };
 });
 #endregion
@@ -87,6 +141,7 @@ builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<ITokenService, TokenService>();
 builder.Services.AddScoped<ICurrentUserService, CurrentUserService>();
 builder.Services.AddScoped<IRoleService, RoleService>();
+builder.Services.AddScoped<IPasswordHasher, PasswordHasher>();
 #endregion
 
 #region Validaciones
