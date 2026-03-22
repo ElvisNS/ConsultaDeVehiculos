@@ -39,6 +39,7 @@ namespace VehicleRegistryAPI.Repositories.Generics
         public async Task<(IEnumerable<TEntity> Data, int TotalRecords)> GetPagedAsync(
             int page,
             int pageSize,
+            Expression<Func<TEntity, bool>> expression,
             params Expression<Func<TEntity, object>>[] includes)
         {
             IQueryable<TEntity> query = _dbSet;

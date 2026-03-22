@@ -46,7 +46,6 @@ namespace VehicleRegistryAPI.Services.Car
                 PageSize = pageSize
             };
         }
-
         public async Task<CarResponseDto> CreateAsync(CreateCarDto dto)
         {
             _logger.LogInformation("Creando nuevo vehículo con placa {PlateNumber} para cédula {Cedula}",
@@ -71,7 +70,6 @@ namespace VehicleRegistryAPI.Services.Car
 
             return _mapper.Map<CarResponseDto>(car);
         }
-
         public async Task<CarResponseDto> UpdateAsync(int id, UpdateCarDto dto)
         {
             _logger.LogInformation("Actualizando vehículo con ID {CarId}", id);
@@ -95,9 +93,8 @@ namespace VehicleRegistryAPI.Services.Car
             }
 
             car.PersonId = person.Id;
-            // Si hay más propiedades en UpdateCarDto, mapearlas. Por ejemplo: car.PlateNumber = dto.PlateNumber; etc.
-            // Asumo que UpdateCarDto tiene propiedades como PlateNumber, Model, etc., y se mapean con AutoMapper.
-            _mapper.Map(dto, car); // Añadir esta línea si no estaba
+
+            _mapper.Map(dto, car); 
 
             await _carRepository.UpdateAsync(car);
 
@@ -106,7 +103,6 @@ namespace VehicleRegistryAPI.Services.Car
 
             return _mapper.Map<CarResponseDto>(car);
         }
-
         public async Task<CarResponseDto> GetByIdAsync(int id)
         {
             _logger.LogInformation("Buscando vehículo por ID {CarId}", id);
@@ -125,7 +121,6 @@ namespace VehicleRegistryAPI.Services.Car
             _logger.LogInformation("Vehículo con ID {CarId} encontrado, placa {PlateNumber}", id, car.PlateNumber);
             return _mapper.Map<CarResponseDto>(car);
         }
-
         public async Task<bool> ExistsByPlateNumberAsync(string plateNumber)
         {
             _logger.LogDebug("Verificando existencia de vehículo con placa {PlateNumber}", plateNumber);
@@ -136,7 +131,6 @@ namespace VehicleRegistryAPI.Services.Car
 
             return exists;
         }
-
         public async Task<CarResponseDto> GetByPlateNumberAsync(string plateNumber)
         {
             _logger.LogInformation("Buscando vehículo por placa {PlateNumber}", plateNumber);
@@ -155,7 +149,6 @@ namespace VehicleRegistryAPI.Services.Car
             _logger.LogInformation("Vehículo con placa {PlateNumber} encontrado (ID {CarId})", plateNumber, car.Id);
             return _mapper.Map<CarResponseDto>(car);
         }
-
         public async Task<CarResponseDto> ToggleActive(int id)
         {
             _logger.LogInformation("Cambiando estado activo de vehículo con ID {CarId}", id);

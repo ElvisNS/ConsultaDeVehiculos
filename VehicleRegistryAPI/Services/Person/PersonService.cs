@@ -42,7 +42,6 @@ namespace VehicleRegistryAPI.Services.Person
                 PageSize = pageSize
             };
         }
-
         public async Task<PersonResponseDto> CreateAsync(CreatePersonDto dto)
         {
             _logger.LogInformation("Creando nueva persona con NationalId {NationalId}", dto.NationalId);
@@ -55,7 +54,6 @@ namespace VehicleRegistryAPI.Services.Person
 
             return _mapper.Map<PersonResponseDto>(person);
         }
-
         public async Task<PersonResponseDto> UpdateAsync(int id, UpdatePersonDto dto)
         {
             _logger.LogInformation("Actualizando persona con ID {PersonId}", id);
@@ -77,7 +75,6 @@ namespace VehicleRegistryAPI.Services.Person
             return _mapper.Map<PersonResponseDto>(person);
 
         }
-
         public async Task<PersonResponseDto> GetByIdAsync(int id)
         {
             _logger.LogInformation("Buscando persona por ID {PersonId}", id);
@@ -98,7 +95,6 @@ namespace VehicleRegistryAPI.Services.Person
 
             return _mapper.Map<PersonResponseDto>(person);
         }
-
         public async Task<bool> ExistsByNationalIdAsync(string nationalId)
         {
             _logger.LogDebug("Verificando existencia de persona con NationalId {NationalId}", nationalId);
@@ -109,7 +105,6 @@ namespace VehicleRegistryAPI.Services.Person
 
             return exists;
         }
-
         public async Task<PersonResponseDto> GetByNationalIdAsync(string nationalId)
         {
             _logger.LogInformation("Buscando persona por NationalId {NationalId}", nationalId);
@@ -129,7 +124,6 @@ namespace VehicleRegistryAPI.Services.Person
             _logger.LogInformation("Persona con NationalId {NationalId} encontrada (ID {PersonId})", nationalId, person.Id);
             return _mapper.Map<PersonResponseDto>(person);
         }
-
         public async Task<PersonResponseDto> ToggleActive(int id)
         {
             _logger.LogInformation("Cambiando estado activo de persona con ID {PersonId}", id);
@@ -154,4 +148,3 @@ namespace VehicleRegistryAPI.Services.Person
         }
     }
 }
-

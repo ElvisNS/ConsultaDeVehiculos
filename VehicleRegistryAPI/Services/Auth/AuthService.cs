@@ -34,48 +34,36 @@ namespace VehicleRegistryAPI.Services.Auth
         {
             _logger.LogInformation("Intento de inicio de sesión para email {Email}", dto.Email);
 
-            try
+            // 1. Buscar usuario
+            var user = await _userRepository.GetByEmailAsync(dto.Email);
+
+            if (user == null || !user.IsActive)
             {
-                // 1. Buscar usuario por email
-                var user = await _userRepository.GetByEmailAsync(dto.Email);
-                if (user == null)
-                {
-                    _logger.LogWarning("Inicio de sesión fallido: email {Email} no registrado", dto.Email);
-                    throw new UnauthorizedException("Credenciales inválidas");
-                }
-
-                // 2. Verificar contraseña
-                bool passwordValid = _passwordHasher.VerifyPassword(dto.Password, user.PasswordHash);
-                if (!passwordValid)
-                {
-                    _logger.LogWarning("Inicio de sesión fallido: contraseña incorrecta para email {Email}", dto.Email);
-                    throw new UnauthorizedException("Credenciales inválidas");
-                }
-
-                // 3. Verificar si el usuario está activo
-                if (!user.IsActive)
-                {
-                    _logger.LogWarning("Inicio de sesión fallido: usuario con email {Email} no activo", dto.Email);
-                    throw new UnauthorizedException("Credenciales inválidas");
-                }
-
-                // 4. Generar token
-                var token = _tokenService.GenerateAccessToken(user);
-                var expiration = DateTime.UtcNow.AddMinutes(_jwtSettings.ExpirationMinutes);
-
-                _logger.LogInformation("Inicio de sesión exitoso para usuario {UserId} con email {Email}", user.Id, user.Email);
-
-                return new AuthResponseDto
-                {
-                    AccessToken = token,
-                    Expiration = expiration
-                };
+                _logger.LogWarning("Inicio de sesión fallido para email {Email}", dto.Email);
+                throw new UnauthorizedException("Credenciales inválidas");
             }
-            catch (Exception ex) when (ex is not UnauthorizedException)
+
+            // 2. Verificar contraseña
+            var passwordValid = _passwordHasher.VerifyPassword(dto.Password, user.PasswordHash);
+
+            if (!passwordValid)
             {
-                _logger.LogError(ex, "Error inesperado durante el inicio de sesión para email {Email}", dto.Email);
-                throw;
+                _logger.LogWarning("Inicio de sesión fallido para email {Email}", dto.Email);
+                throw new UnauthorizedException("Credenciales inválidas");
             }
+
+            // 3. Generar token
+            var token = _tokenService.GenerateAccessToken(user);
+
+            var expiration = DateTime.UtcNow.AddMinutes(_jwtSettings.ExpirationMinutes);
+
+            _logger.LogInformation("Inicio de sesión exitoso para usuario {UserId}", user.Id);
+
+            return new AuthResponseDto
+            {
+                AccessToken = token,
+                Expiration = expiration
+            };
         }
     }
 }

@@ -270,14 +270,15 @@ namespace VehicleRegistryAPI.Tests.Services
 
             // Verificar que se registró la advertencia correspondiente
             _mockLogger.Verify(
-                x => x.Log(
-                    LogLevel.Warning,
-                    It.IsAny<EventId>(),
-                    It.Is<It.IsAnyType>((v, t) => v.ToString().Contains("Inicio de sesión fallido: Usuario con")
-                                               && v.ToString().Contains(loginDto.Email)),
-                    null,
-                    It.IsAny<Func<It.IsAnyType, Exception, string>>()),
-                Times.Once);
+                 x => x.Log(
+                     LogLevel.Warning,
+                     It.IsAny<EventId>(),
+                     It.Is<It.IsAnyType>((v, t) =>
+                         v.ToString().Contains("Inicio de sesión fallido para email") &&
+                         v.ToString().Contains(loginDto.Email)),
+                     null,
+                     It.IsAny<Func<It.IsAnyType, Exception, string>>()),
+                 Times.Once);
         }
 
         #endregion

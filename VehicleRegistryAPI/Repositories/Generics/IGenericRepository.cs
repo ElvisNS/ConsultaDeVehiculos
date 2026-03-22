@@ -7,9 +7,10 @@ namespace VehicleRegistryAPI.Repositories.Generics
     where TEntity : BaseEntity
     {
         Task<(IEnumerable<TEntity> Data, int TotalRecords)> GetPagedAsync(
-            int page,
-            int pageSize,
-            params Expression<Func<TEntity, object>>[] includes);
+                   int page,
+                   int pageSize,
+                   Expression<Func<TEntity, bool>> expression,
+                   params Expression<Func<TEntity, object>>[] includes);
 
         Task<TEntity?> GetFirstOrDefaultAsync(
         Expression<Func<TEntity, bool>> predicate,
