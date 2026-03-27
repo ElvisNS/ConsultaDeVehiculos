@@ -1,7 +1,6 @@
 ﻿using FluentValidation;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.Logging;
 using System.Security.Claims;
 using VehicleRegistryAPI.DTOS.Roles;
 using VehicleRegistryAPI.DTOS.Users;

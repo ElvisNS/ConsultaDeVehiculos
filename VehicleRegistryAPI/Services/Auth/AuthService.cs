@@ -1,5 +1,4 @@
-﻿using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Options;
+﻿using Microsoft.Extensions.Options;
 using VehicleRegistryAPI.Configurations;
 using VehicleRegistryAPI.DTOS.Auth;
 using VehicleRegistryAPI.Repositories.Interfaces;
@@ -26,7 +25,7 @@ namespace VehicleRegistryAPI.Services.Auth
             _userRepository = userRepository;
             _tokenService = tokenService;
             _passwordHasher = passwordHasher;
-            _jwtSettings = jwtSettings.Value; // 👈 Importante: usar Value
+            _jwtSettings = jwtSettings.Value;
             _logger = logger;
         }
 

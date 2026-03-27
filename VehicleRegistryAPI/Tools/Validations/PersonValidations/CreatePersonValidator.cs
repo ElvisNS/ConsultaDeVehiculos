@@ -8,7 +8,7 @@ namespace VehicleRegistryAPI.Tools.Validations.PersonValidations
     public class CreatePersonValidator : AbstractValidator<CreatePersonDto>
     {
         private readonly IPersonService _personService;
-        public CreatePersonValidator(IPersonService personService) 
+        public CreatePersonValidator(IPersonService personService)
         {
             _personService = personService;
 
@@ -23,7 +23,7 @@ namespace VehicleRegistryAPI.Tools.Validations.PersonValidations
             RuleFor(x => x.FullName)
                 .NotEmpty()
                 .MinimumLength(3)
-                .MaximumLength(20)
+                .MaximumLength(15)
                 .Must(HelpersValidate.IsValidName).WithMessage("{PropertyName} deben ser todas letras");
 
         }

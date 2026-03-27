@@ -32,7 +32,7 @@ namespace VehicleRegistryAPI.Tools.Security
         }
 
         // Verifica si la contraseña coincide con el hash almacenado
-        public  bool VerifyPassword(string password, string storedHash)
+        public bool VerifyPassword(string password, string storedHash)
         {
             var parts = storedHash.Split('.');
             if (parts.Length != 2) return false;

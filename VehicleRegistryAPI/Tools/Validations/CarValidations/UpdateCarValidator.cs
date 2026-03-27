@@ -9,7 +9,7 @@ namespace VehicleRegistryAPI.Tools.Validations.CarValidations
     {
         private readonly IPersonService _personService;
 
-        public UpdateCarValidator(IPersonService personService) 
+        public UpdateCarValidator(IPersonService personService)
         {
             _personService = personService;
 

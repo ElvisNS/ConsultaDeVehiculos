@@ -5,20 +5,19 @@ using VehicleRegistryAPI.Repositories.Interfaces;
 using VehicleRegistryAPI.Services.Users;
 using VehicleRegistryAPI.Tools.Exceptions;
 using VehicleRegistryAPI.Tools.Security;
-using ConflictException = VehicleRegistryAPI.Tools.Exceptions.ConflictException;
 
 public class UserService : IUserService
 {
     private readonly IUserRepository _userRepository;
     private readonly IMapper _mapper;
     private readonly IPasswordHasher _passwordHasher;
-    private readonly ILogger<UserService> _logger; 
+    private readonly ILogger<UserService> _logger;
 
     public UserService(
         IUserRepository userRepository,
         IMapper mapper,
         IPasswordHasher passwordHasher,
-        ILogger<UserService> logger) 
+        ILogger<UserService> logger)
     {
         _userRepository = userRepository;
         _mapper = mapper;
@@ -48,7 +47,7 @@ public class UserService : IUserService
 
     public async Task<IEnumerable<UserResponseDto>> GetAll()
     {
-        _logger.LogDebug("Obteniendo todos los usuarios"); 
+        _logger.LogDebug("Obteniendo todos los usuarios");
 
         var users = await _userRepository.GetAllAsync();
 

@@ -4,7 +4,6 @@ using Moq;
 using VehicleRegistryAPI.DTOS.Users;
 using VehicleRegistryAPI.Entities;
 using VehicleRegistryAPI.Repositories.Interfaces;
-using VehicleRegistryAPI.Services.Users;
 using VehicleRegistryAPI.Tools.Exceptions;
 using VehicleRegistryAPI.Tools.Security;
 
@@ -502,6 +501,365 @@ namespace VehicleRegistryAPI.Tests.Services
             _mockUserRepository.Verify(r => r.UpdateAsync(user), Times.Once);
         }
 
+        #endregion
+
+        #region GetAll
+        [Fact]
+        public async Task GetAll_WhenUsersExist_ReturnsUserResponseDtoList()
+        {
+            // Arrange
+            var users = new List<User>
+    {
+        new User
+        {
+            Id = 1,
+            UserName = "juan.perez",
+            Email = "juan@example.com",
+            IsActive = true,
+            UserRoless = new List<UserRoles> { new UserRoles { Role = new Roles { Name = "Admin" } } }
+        },
+        new User
+        {
+            Id = 2,
+            UserName = "maria.gomez",
+            Email = "maria@example.com",
+            IsActive = false,
+            UserRoless = new List<UserRoles> { new UserRoles { Role = new Roles { Name = "User" } } }
+        }
+    };
+
+            var responseDtos = new List<UserResponseDto>
+    {
+        new UserResponseDto
+        {
+            Id = 1,
+            UserName = "juan.perez",
+            Email = "juan@example.com",
+            IsActive = true,
+            RoleName = "Admin"
+        },
+        new UserResponseDto
+        {
+            Id = 2,
+            UserName = "maria.gomez",
+            Email = "maria@example.com",
+            IsActive = false,
+            RoleName = "User"
+        }
+    };
+
+            _mockUserRepository
+                .Setup(r => r.GetAllAsync())
+                .ReturnsAsync(users);
+
+            _mockMapper
+                .Setup(m => m.Map<IEnumerable<UserResponseDto>>(users))
+                .Returns(responseDtos);
+
+            // Act
+            var result = await _userService.GetAll();
+
+            // Assert
+            Assert.NotNull(result);
+            Assert.Equal(responseDtos, result);
+            _mockUserRepository.Verify(r => r.GetAllAsync(), Times.Once);
+            _mockMapper.Verify(m => m.Map<IEnumerable<UserResponseDto>>(users), Times.Once);
+
+            _mockLogger.Verify(
+                x => x.Log(LogLevel.Debug, It.IsAny<EventId>(),
+                    It.Is<It.IsAnyType>((v, t) => v.ToString().Contains("Obteniendo todos los usuarios")),
+                    It.IsAny<Exception>(), It.IsAny<Func<It.IsAnyType, Exception, string>>()),
+                Times.Once);
+
+            _mockLogger.Verify(
+                x => x.Log(LogLevel.Debug, It.IsAny<EventId>(),
+                    It.Is<It.IsAnyType>((v, t) => v.ToString().Contains($"Se obtuvieron {responseDtos.Count} usuarios")),
+                    It.IsAny<Exception>(), It.IsAny<Func<It.IsAnyType, Exception, string>>()),
+                Times.Once);
+        }
+
+        [Fact]
+        public async Task GetAll_WhenNoUsersExist_ReturnsEmptyList()
+        {
+            // Arrange
+            var users = new List<User>();
+            var responseDtos = new List<UserResponseDto>();
+
+            _mockUserRepository
+                .Setup(r => r.GetAllAsync())
+                .ReturnsAsync(users);
+
+            _mockMapper
+                .Setup(m => m.Map<IEnumerable<UserResponseDto>>(users))
+                .Returns(responseDtos);
+
+            // Act
+            var result = await _userService.GetAll();
+
+            // Assert
+            Assert.NotNull(result);
+            Assert.Empty(result);
+            _mockUserRepository.Verify(r => r.GetAllAsync(), Times.Once);
+            _mockMapper.Verify(m => m.Map<IEnumerable<UserResponseDto>>(users), Times.Once);
+
+            _mockLogger.Verify(
+                x => x.Log(LogLevel.Debug, It.IsAny<EventId>(),
+                    It.Is<It.IsAnyType>((v, t) => v.ToString().Contains("Obteniendo todos los usuarios")),
+                    It.IsAny<Exception>(), It.IsAny<Func<It.IsAnyType, Exception, string>>()),
+                Times.Once);
+
+            _mockLogger.Verify(
+                x => x.Log(LogLevel.Debug, It.IsAny<EventId>(),
+                    It.Is<It.IsAnyType>((v, t) => v.ToString().Contains("Se obtuvieron 0 usuarios")),
+                    It.IsAny<Exception>(), It.IsAny<Func<It.IsAnyType, Exception, string>>()),
+                Times.Once);
+        }
+
+        [Fact]
+        public async Task GetAll_WhenRepositoryThrowsException_PropagatesException()
+        {
+            // Arrange
+            var expectedException = new InvalidOperationException("Error de base de datos");
+
+            _mockUserRepository
+                .Setup(r => r.GetAllAsync())
+                .ThrowsAsync(expectedException);
+
+            // Act & Assert
+            var exception = await Assert.ThrowsAsync<InvalidOperationException>(
+                () => _userService.GetAll());
+
+            Assert.Equal(expectedException.Message, exception.Message);
+            _mockMapper.Verify(m => m.Map<IEnumerable<UserResponseDto>>(It.IsAny<IEnumerable<User>>()), Times.Never);
+            // Los logs no deberían ejecutarse porque la excepción ocurre antes
+        }
+
+        [Fact]
+        public async Task GetAll_WhenMapperThrowsException_PropagatesException()
+        {
+            // Arrange
+            var users = new List<User> { new User { Id = 1, UserName = "test", Email = "test@example.com" } };
+            var expectedException = new AutoMapperMappingException("Error de mapeo");
+
+            _mockUserRepository
+                .Setup(r => r.GetAllAsync())
+                .ReturnsAsync(users);
+
+            _mockMapper
+                .Setup(m => m.Map<IEnumerable<UserResponseDto>>(users))
+                .Throws(expectedException);
+
+            // Act & Assert
+            var exception = await Assert.ThrowsAsync<AutoMapperMappingException>(
+                () => _userService.GetAll());
+
+            Assert.Equal(expectedException.Message, exception.Message);
+            _mockUserRepository.Verify(r => r.GetAllAsync(), Times.Once);
+            // Los logs sí se ejecutan antes de la excepción, pero no es necesario verificarlos aquí
+        }
+        #endregion
+
+        #region GetById
+        [Fact]
+        public async Task GetById_ExistingUser_ReturnsUserResponseDto()
+        {
+            // Arrange
+            int userId = 1;
+            var user = new User
+            {
+                Id = userId,
+                UserName = "juan.perez",
+                Email = "juan@example.com",
+                IsActive = true,
+                UserRoless = new List<UserRoles> { new UserRoles { Role = new Roles { Name = "Admin" } } }
+            };
+            var responseDto = new UserResponseDto
+            {
+                Id = userId,
+                UserName = "juan.perez",
+                Email = "juan@example.com",
+                IsActive = true,
+                RoleName = "Admin"
+            };
+
+            _mockUserRepository
+                .Setup(r => r.GetByIdAsync(userId))
+                .ReturnsAsync(user);
+
+            _mockMapper
+                .Setup(m => m.Map<UserResponseDto>(user))
+                .Returns(responseDto);
+
+            // Act
+            var result = await _userService.GetById(userId);
+
+            // Assert
+            Assert.NotNull(result);
+            Assert.Equal(responseDto, result);
+            _mockUserRepository.Verify(r => r.GetByIdAsync(userId), Times.Once);
+            _mockMapper.Verify(m => m.Map<UserResponseDto>(user), Times.Once);
+
+            _mockLogger.Verify(
+                x => x.Log(LogLevel.Information, It.IsAny<EventId>(),
+                    It.Is<It.IsAnyType>((v, t) => v.ToString().Contains($"Buscando usuario con ID {userId}")),
+                    It.IsAny<Exception>(), It.IsAny<Func<It.IsAnyType, Exception, string>>()),
+                Times.Once);
+
+            _mockLogger.Verify(
+                x => x.Log(LogLevel.Information, It.IsAny<EventId>(),
+                    It.Is<It.IsAnyType>((v, t) => v.ToString().Contains($"Usuario {userId} encontrado")),
+                    It.IsAny<Exception>(), It.IsAny<Func<It.IsAnyType, Exception, string>>()),
+                Times.Once);
+        }
+
+        [Fact]
+        public async Task GetById_UserNotFound_ThrowsNotFoundException()
+        {
+            // Arrange
+            int userId = 999;
+
+            _mockUserRepository
+                .Setup(r => r.GetByIdAsync(userId))
+                .ReturnsAsync((User)null);
+
+            // Act & Assert
+            var exception = await Assert.ThrowsAsync<NotFoundException>(
+                () => _userService.GetById(userId));
+
+            Assert.Equal("Usuario no encontrado", exception.Message);
+            _mockUserRepository.Verify(r => r.GetByIdAsync(userId), Times.Once);
+            _mockMapper.Verify(m => m.Map<UserResponseDto>(It.IsAny<User>()), Times.Never);
+
+            _mockLogger.Verify(
+                x => x.Log(LogLevel.Warning, It.IsAny<EventId>(),
+                    It.Is<It.IsAnyType>((v, t) => v.ToString().Contains($"Usuario con ID {userId} no encontrado")),
+                    It.IsAny<Exception>(), It.IsAny<Func<It.IsAnyType, Exception, string>>()),
+                Times.Once);
+        }
+
+        [Fact]
+        public async Task GetById_WhenRepositoryThrows_PropagatesException()
+        {
+            // Arrange
+            int userId = 1;
+            var expectedException = new InvalidOperationException("Error de base de datos");
+
+            _mockUserRepository
+                .Setup(r => r.GetByIdAsync(userId))
+                .ThrowsAsync(expectedException);
+
+            // Act & Assert
+            var exception = await Assert.ThrowsAsync<InvalidOperationException>(
+                () => _userService.GetById(userId));
+
+            Assert.Equal(expectedException.Message, exception.Message);
+            _mockMapper.Verify(m => m.Map<UserResponseDto>(It.IsAny<User>()), Times.Never);
+        }
+
+        [Fact]
+        public async Task GetById_WhenMapperThrows_PropagatesException()
+        {
+            // Arrange
+            int userId = 1;
+            var user = new User { Id = userId, UserName = "test", Email = "test@example.com" };
+            var expectedException = new AutoMapperMappingException("Error de mapeo");
+
+            _mockUserRepository
+                .Setup(r => r.GetByIdAsync(userId))
+                .ReturnsAsync(user);
+
+            _mockMapper
+                .Setup(m => m.Map<UserResponseDto>(user))
+                .Throws(expectedException);
+
+            // Act & Assert
+            var exception = await Assert.ThrowsAsync<AutoMapperMappingException>(
+                () => _userService.GetById(userId));
+
+            Assert.Equal(expectedException.Message, exception.Message);
+        }
+        #endregion
+
+        #region EmailExists
+        [Fact]
+        public async Task EmailExists_WhenEmailExists_ReturnsTrue()
+        {
+            // Arrange
+            string email = "juan@example.com";
+
+            _mockUserRepository
+                .Setup(r => r.ExistsByEmailAsync(email))
+                .ReturnsAsync(true);
+
+            // Act
+            var result = await _userService.EmailExists(email);
+
+            // Assert
+            Assert.True(result);
+            _mockUserRepository.Verify(r => r.ExistsByEmailAsync(email), Times.Once);
+
+            _mockLogger.Verify(
+                x => x.Log(LogLevel.Debug, It.IsAny<EventId>(),
+                    It.Is<It.IsAnyType>((v, t) => v.ToString().Contains($"Verificando existencia de email {email}")),
+                    It.IsAny<Exception>(), It.IsAny<Func<It.IsAnyType, Exception, string>>()),
+                Times.Once);
+
+            _mockLogger.Verify(
+                x => x.Log(LogLevel.Debug, It.IsAny<EventId>(),
+                    It.Is<It.IsAnyType>((v, t) => v.ToString().Contains($"Email {email} existe: True")),
+                    It.IsAny<Exception>(), It.IsAny<Func<It.IsAnyType, Exception, string>>()),
+                Times.Once);
+        }
+
+        [Fact]
+        public async Task EmailExists_WhenEmailDoesNotExist_ReturnsFalse()
+        {
+            // Arrange
+            string email = "nonexistent@example.com";
+
+            _mockUserRepository
+                .Setup(r => r.ExistsByEmailAsync(email))
+                .ReturnsAsync(false);
+
+            // Act
+            var result = await _userService.EmailExists(email);
+
+            // Assert
+            Assert.False(result);
+            _mockUserRepository.Verify(r => r.ExistsByEmailAsync(email), Times.Once);
+
+            _mockLogger.Verify(
+                x => x.Log(LogLevel.Debug, It.IsAny<EventId>(),
+                    It.Is<It.IsAnyType>((v, t) => v.ToString().Contains($"Verificando existencia de email {email}")),
+                    It.IsAny<Exception>(), It.IsAny<Func<It.IsAnyType, Exception, string>>()),
+                Times.Once);
+
+            _mockLogger.Verify(
+                x => x.Log(LogLevel.Debug, It.IsAny<EventId>(),
+                    It.Is<It.IsAnyType>((v, t) => v.ToString().Contains($"Email {email} existe: False")),
+                    It.IsAny<Exception>(), It.IsAny<Func<It.IsAnyType, Exception, string>>()),
+                Times.Once);
+        }
+
+        [Fact]
+        public async Task EmailExists_WhenRepositoryThrows_PropagatesException()
+        {
+            // Arrange
+            string email = "test@example.com";
+            var expectedException = new InvalidOperationException("Error de base de datos");
+
+            _mockUserRepository
+                .Setup(r => r.ExistsByEmailAsync(email))
+                .ThrowsAsync(expectedException);
+
+            // Act & Assert
+            var exception = await Assert.ThrowsAsync<InvalidOperationException>(
+                () => _userService.EmailExists(email));
+
+            Assert.Equal(expectedException.Message, exception.Message);
+            _mockUserRepository.Verify(r => r.ExistsByEmailAsync(email), Times.Once);
+            // Los logs se registran antes de la excepción, no es necesario verificarlos aquí
+        }
         #endregion
     }
 }

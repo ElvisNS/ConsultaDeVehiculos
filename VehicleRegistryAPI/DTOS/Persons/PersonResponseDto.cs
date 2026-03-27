@@ -6,7 +6,7 @@ namespace VehicleRegistryAPI.DTOS.Persons
     {
         public int Id { get; set; }
 
-        public string NationalId { get; set; } 
+        public string NationalId { get; set; }
 
         public string FullName { get; set; }
 

@@ -1,6 +1,4 @@
-﻿using System.Data;
-
-namespace VehicleRegistryAPI.Entities
+﻿namespace VehicleRegistryAPI.Entities
 {
     public class UserRoles
     {

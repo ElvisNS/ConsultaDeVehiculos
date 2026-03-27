@@ -5,9 +5,9 @@ using VehicleRegistryAPI.Tools.Validations.ValidationHelpers;
 namespace VehicleRegistryAPI.Tools.Validations.PersonValidations
 {
     public class UpdatePersonValidator : AbstractValidator<UpdatePersonDto>
-    { 
-        public UpdatePersonValidator() 
-        { 
+    {
+        public UpdatePersonValidator()
+        {
             RuleFor(x => x.FullName).NotEmpty()
                 .MinimumLength(3)
                 .MaximumLength(20)

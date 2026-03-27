@@ -1,6 +1,5 @@
 ﻿using FluentValidation;
 using VehicleRegistryAPI.DTOS.Auth;
-using VehicleRegistryAPI.Repositories.Implementations;
 using VehicleRegistryAPI.Repositories.Interfaces;
 using VehicleRegistryAPI.Tools.Security;
 
@@ -10,7 +9,7 @@ namespace VehicleRegistryAPI.Tools.Validations.AuthValidations
     {
         private readonly IUserRepository _userRepository;
         private readonly IPasswordHasher _passwordHasher;
-        public AuthValidator(IUserRepository userRepositor, IPasswordHasher passwordHasher ) 
+        public AuthValidator(IUserRepository userRepositor, IPasswordHasher passwordHasher)
         {
             _userRepository = userRepositor;
             _passwordHasher = passwordHasher;

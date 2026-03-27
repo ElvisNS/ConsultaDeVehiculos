@@ -1,7 +1,7 @@
-using System.Security.Claims;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
 using Moq;
+using System.Security.Claims;
 using VehicleRegistryAPI.Services.Users;
 
 namespace VehicleRegistryAPI.Tests.Services

@@ -1,5 +1,4 @@
 ﻿using FluentValidation;
-using Microsoft.EntityFrameworkCore.Metadata;
 using VehicleRegistryAPI.DTOS.Users;
 using VehicleRegistryAPI.Services.Users;
 
@@ -8,7 +7,7 @@ namespace VehicleRegistryAPI.Tools.Validations.UserValidations
     public class CreateUserValidator : AbstractValidator<CreateUserDto>
     {
         private readonly IUserService _userService;
-        public CreateUserValidator(IUserService userService) 
+        public CreateUserValidator(IUserService userService)
         {
             _userService = userService;
 
@@ -20,7 +19,7 @@ namespace VehicleRegistryAPI.Tools.Validations.UserValidations
             RuleFor(x => x.UserName)
                 .NotEmpty().WithMessage("El username es requerido")
                 .MinimumLength(3)
-                .MaximumLength(50)
+                .MaximumLength(10)
                 .Matches(@"^[a-zA-Z0-9_]+$").WithMessage("Solo letras, números y guión bajo");
 
             RuleFor(x => x.Password)

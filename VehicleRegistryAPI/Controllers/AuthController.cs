@@ -1,10 +1,7 @@
 ﻿using FluentValidation;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using System.ComponentModel.DataAnnotations;
 using VehicleRegistryAPI.DTOS.Auth;
 using VehicleRegistryAPI.Services.Auth;
-using Microsoft.Extensions.Logging;
 
 namespace VehicleRegistryAPI.Controllers
 {

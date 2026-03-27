@@ -1,8 +1,6 @@
 ﻿using AutoMapper;
-using Microsoft.EntityFrameworkCore;
 using VehicleRegistryAPI.DTOS;
 using VehicleRegistryAPI.DTOS.Persons;
-using VehicleRegistryAPI.Entities;
 using VehicleRegistryAPI.Repositories.Interfaces;
 using VehicleRegistryAPI.Tools.Exceptions;
 
@@ -28,7 +26,7 @@ namespace VehicleRegistryAPI.Services.Person
         {
             _logger.LogInformation("Obteniendo personas paginadas: página {Page}, tamaño {PageSize}", page, pageSize);
             var (persons, totalRecords) = await _personRepository
-                .GetPagedAsync(page, pageSize, p => p.IsActive, p => p.Cars); 
+                .GetPagedAsync(page, pageSize, p => p.IsActive, p => p.Cars);
 
             var mappedPersons = _mapper.Map<IEnumerable<PersonResponseDto>>(persons);
 

@@ -1,5 +1,4 @@
 ﻿using Microsoft.EntityFrameworkCore;
-using System.Data;
 using VehicleRegistryAPI.Entities;
 
 namespace VehicleRegistryAPI.Data
@@ -124,7 +123,7 @@ namespace VehicleRegistryAPI.Data
                       .IsRequired()
                       .HasMaxLength(20);
                 entity.HasIndex(c => c.PlateNumber)
-                       .IsUnique();  
+                       .IsUnique();
 
                 entity.Property(c => c.Brand)
                       .IsRequired()

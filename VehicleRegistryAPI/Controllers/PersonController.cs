@@ -1,10 +1,8 @@
 ﻿using FluentValidation;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.Logging;
 using VehicleRegistryAPI.DTOS.Persons;
 using VehicleRegistryAPI.Services.Person;
-using VehicleRegistryAPI.Tools.Exceptions;
 
 namespace VehicleRegistryAPI.Controllers
 {
@@ -17,8 +15,8 @@ namespace VehicleRegistryAPI.Controllers
         private readonly IValidator<CreatePersonDto> _createvalidator;
         private readonly IValidator<UpdatePersonDto> _updateValidator;
         private readonly ILogger<PersonController> _logger;
-        public PersonController(IPersonService personService, 
-            IValidator<CreatePersonDto> createvalidator, 
+        public PersonController(IPersonService personService,
+            IValidator<CreatePersonDto> createvalidator,
             IValidator<UpdatePersonDto> updatevalidator,
             ILogger<PersonController> logger)
         {

@@ -24,7 +24,7 @@ namespace VehicleRegistryAPI.Repositories.Implementations
 
         public async Task<bool> ExistsByEmailAsync(string email)
         {
-            return await _dbSet.AnyAsync(u => u.Email == email );
+            return await _dbSet.AnyAsync(u => u.Email == email);
         }
 
         public async Task<IEnumerable<User>> GetAllAsync()

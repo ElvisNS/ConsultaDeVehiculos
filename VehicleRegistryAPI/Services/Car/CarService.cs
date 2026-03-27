@@ -1,7 +1,6 @@
 ﻿using AutoMapper;
 using VehicleRegistryAPI.DTOS;
 using VehicleRegistryAPI.DTOS.Cars;
-using VehicleRegistryAPI.DTOS.Persons;
 using VehicleRegistryAPI.Repositories.Interfaces;
 using VehicleRegistryAPI.Tools.Exceptions;
 
@@ -94,7 +93,7 @@ namespace VehicleRegistryAPI.Services.Car
 
             car.PersonId = person.Id;
 
-            _mapper.Map(dto, car); 
+            _mapper.Map(dto, car);
 
             await _carRepository.UpdateAsync(car);
 

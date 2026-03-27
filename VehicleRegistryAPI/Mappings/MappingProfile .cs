@@ -1,8 +1,6 @@
 ﻿using AutoMapper;
-using System.Data;
 using VehicleRegistryAPI.DTOS.Cars;
 using VehicleRegistryAPI.DTOS.Persons;
-using VehicleRegistryAPI.DTOS.Roles;
 using VehicleRegistryAPI.DTOS.Users;
 using VehicleRegistryAPI.Entities;
 
@@ -10,7 +8,7 @@ namespace VehicleRegistryAPI.Mappings
 {
     public class MappingProfile : Profile
     {
-        public MappingProfile() 
+        public MappingProfile()
         {
             // Person
             CreateMap<Person, PersonResponseDto>();

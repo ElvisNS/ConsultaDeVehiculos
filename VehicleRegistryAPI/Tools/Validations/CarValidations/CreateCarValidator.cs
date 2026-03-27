@@ -11,12 +11,11 @@ namespace VehicleRegistryAPI.Tools.Validations.CarValidations
         private readonly ICarService _carService;
         private readonly IPersonService _personService;
 
-        public CreateCarValidator(ICarService carService, 
-            IPersonService personService) 
+        public CreateCarValidator(ICarService carService,
+            IPersonService personService)
         {
             _carService = carService;
             _personService = personService;
-
 
             RuleFor(x => x.PlateNumber)
                 .NotEmpty()
@@ -36,7 +35,7 @@ namespace VehicleRegistryAPI.Tools.Validations.CarValidations
                 .NotEmpty()
                 .WithMessage("{PropertyName} No puede estar vacia")
                 .MinimumLength(3)
-                .MaximumLength (10)
+                .MaximumLength(10)
                 .Must(HelpersValidate.IsValidName).WithMessage("{PropertyName} solo acepta letras");
 
             RuleFor(x => x.Brand)

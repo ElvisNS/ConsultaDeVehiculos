@@ -1,7 +1,4 @@
-﻿using VehicleRegistryAPI.DTOS.Roles;
-using VehicleRegistryAPI.Entities;
-
-namespace VehicleRegistryAPI.DTOS.Users
+﻿namespace VehicleRegistryAPI.DTOS.Users
 {
     public class UserResponseDto
     {

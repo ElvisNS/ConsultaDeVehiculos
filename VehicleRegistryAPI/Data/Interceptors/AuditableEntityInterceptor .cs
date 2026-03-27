@@ -5,7 +5,7 @@ using VehicleRegistryAPI.Services.Users;
 
 namespace VehicleRegistryAPI.Data.Interceptors
 {
-    public class AuditableEntityInterceptor: SaveChangesInterceptor
+    public class AuditableEntityInterceptor : SaveChangesInterceptor
     {
         private readonly ICurrentUserService _currentUserService;
 

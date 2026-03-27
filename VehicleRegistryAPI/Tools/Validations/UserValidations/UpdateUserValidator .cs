@@ -5,7 +5,7 @@ namespace VehicleRegistryAPI.Tools.Validations.UserValidations
 {
     public class UpdateUserValidator : AbstractValidator<UpdateUserDto>
     {
-        public UpdateUserValidator() 
+        public UpdateUserValidator()
         {
             RuleFor(x => x.UserName)
                      .NotEmpty().WithMessage("El username es requerido")

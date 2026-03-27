@@ -1,12 +1,7 @@
 ﻿using AutoMapper;
 using Microsoft.Extensions.Logging;
 using Moq;
-using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Linq.Expressions;
-using System.Text;
-using System.Threading.Tasks;
 using VehicleRegistryAPI.DTOS.Cars;
 using VehicleRegistryAPI.DTOS.Persons;
 using VehicleRegistryAPI.Entities;
@@ -29,8 +24,8 @@ namespace VehicleRegistryAPI.Tests.Services
             _mapperMock = new Mock<IMapper>();
             _loggerMock = new Mock<ILogger<PersonService>>();
             _service = new PersonService(
-                _repositoryMock.Object, 
-                _mapperMock.Object, 
+                _repositoryMock.Object,
+                _mapperMock.Object,
                 _loggerMock.Object);
         }
 
@@ -317,7 +312,7 @@ namespace VehicleRegistryAPI.Tests.Services
                     It.IsAny<Func<It.IsAnyType, Exception, string>>()),
                 Times.Once);
         }
-        
+
         [Fact]
         public async Task CreateAsync_CuandoRepositoryLanzaExcepcion_PropagaExcepcion()
         {
@@ -1020,6 +1015,237 @@ namespace VehicleRegistryAPI.Tests.Services
             // Act & Assert
             var exception = await Assert.ThrowsAsync<AutoMapperMappingException>(
                 () => _service.ToggleActive(id));
+
+            Assert.Equal(expectedException.Message, exception.Message);
+        }
+        #endregion
+
+        #region GetById
+        [Fact]
+        public async Task GetByIdAsync_ExistingPerson_ReturnsPersonResponseDto()
+        {
+            // Arrange
+            int personId = 1;
+            var person = new Person
+            {
+                Id = personId,
+                NationalId = "12345678",
+                FullName = "Juan Pérez",
+                IsActive = true,
+                Cars = new List<Car>
+        {
+            new Car { Id = 1, PlateNumber = "ABC123", Brand = "Toyota", Model = "Corolla" },
+            new Car { Id = 2, PlateNumber = "XYZ789", Brand = "Honda", Model = "Civic" }
+        }
+            };
+            var responseDto = new PersonResponseDto
+            {
+                Id = personId,
+                NationalId = "12345678",
+                FullName = "Juan Pérez",
+                IsActive = true,
+                Cars = new List<CarDto>
+        {
+            new CarDto { Id = 1, PlateNumber = "ABC123", Model = "Corolla" },
+            new CarDto { Id = 2, PlateNumber = "XYZ789", Model = "Civic" }
+        }
+            };
+
+            _repositoryMock
+                .Setup(r => r.GetFirstOrDefaultAsync(
+                    It.IsAny<Expression<Func<Person, bool>>>(),
+                    It.IsAny<Expression<Func<Person, object>>[]>()))
+                .ReturnsAsync(person);
+
+            _mapperMock
+                .Setup(m => m.Map<PersonResponseDto>(person))
+                .Returns(responseDto);
+
+            // Act
+            var result = await _service.GetByIdAsync(personId);
+
+            // Assert
+            Assert.NotNull(result);
+            Assert.Equal(responseDto, result);
+
+            // Verificar que se llamó al repositorio con el predicado correcto y el include
+            _repositoryMock.Verify(r => r.GetFirstOrDefaultAsync(
+                It.Is<Expression<Func<Person, bool>>>(expr =>
+                    expr.Compile().Invoke(new Person { Id = personId }) == true &&
+                    expr.Compile().Invoke(new Person { Id = personId + 1 }) == false),
+                It.Is<Expression<Func<Person, object>>[]>(exprs =>
+                    exprs.Length == 1 && exprs[0].Body.ToString().Contains("Cars"))),
+                Times.Once);
+
+            _mapperMock.Verify(m => m.Map<PersonResponseDto>(person), Times.Once);
+
+            // Logs
+            _loggerMock.Verify(
+                x => x.Log(LogLevel.Information, It.IsAny<EventId>(),
+                    It.Is<It.IsAnyType>((v, t) => v.ToString().Contains($"Buscando persona por ID {personId}")),
+                    It.IsAny<Exception>(), It.IsAny<Func<It.IsAnyType, Exception, string>>()),
+                Times.Once);
+
+            _loggerMock.Verify(
+                x => x.Log(LogLevel.Information, It.IsAny<EventId>(),
+                    It.Is<It.IsAnyType>((v, t) => v.ToString().Contains($"Persona con ID {personId} encontrada")),
+                    It.IsAny<Exception>(), It.IsAny<Func<It.IsAnyType, Exception, string>>()),
+                Times.Once);
+        }
+
+        [Fact]
+        public async Task GetByIdAsync_PersonNotFound_ThrowsNotFoundException()
+        {
+            // Arrange
+            int personId = 999;
+
+            _repositoryMock
+                .Setup(r => r.GetFirstOrDefaultAsync(
+                    It.IsAny<Expression<Func<Person, bool>>>(),
+                    It.IsAny<Expression<Func<Person, object>>[]>()))
+                .ReturnsAsync((Person)null);
+
+            // Act & Assert
+            var exception = await Assert.ThrowsAsync<NotFoundException>(
+                () => _service.GetByIdAsync(personId));
+
+            Assert.Equal("Persona no encontrada", exception.Message);
+
+            _repositoryMock.Verify(r => r.GetFirstOrDefaultAsync(
+                It.Is<Expression<Func<Person, bool>>>(expr =>
+                    expr.Compile().Invoke(new Person { Id = personId }) == true),
+                It.IsAny<Expression<Func<Person, object>>[]>()),
+                Times.Once);
+
+            _mapperMock.Verify(m => m.Map<PersonResponseDto>(It.IsAny<Person>()), Times.Never);
+
+            _loggerMock.Verify(
+                x => x.Log(LogLevel.Warning, It.IsAny<EventId>(),
+                    It.Is<It.IsAnyType>((v, t) => v.ToString().Contains($"Persona con ID {personId} no encontrada")),
+                    It.IsAny<Exception>(), It.IsAny<Func<It.IsAnyType, Exception, string>>()),
+                Times.Once);
+        }
+
+        [Fact]
+        public async Task GetByIdAsync_WhenRepositoryThrows_PropagatesException()
+        {
+            // Arrange
+            int personId = 1;
+            var expectedException = new InvalidOperationException("Error de base de datos");
+
+            _repositoryMock
+                .Setup(r => r.GetFirstOrDefaultAsync(
+                    It.IsAny<Expression<Func<Person, bool>>>(),
+                    It.IsAny<Expression<Func<Person, object>>[]>()))
+                .ThrowsAsync(expectedException);
+
+            // Act & Assert
+            var exception = await Assert.ThrowsAsync<InvalidOperationException>(
+                () => _service.GetByIdAsync(personId));
+
+            Assert.Equal(expectedException.Message, exception.Message);
+        }
+
+        [Fact]
+        public async Task GetByIdAsync_WhenMapperThrows_PropagatesException()
+        {
+            // Arrange
+            int personId = 1;
+            var person = new Person { Id = personId, FullName = "Test", NationalId = "123" };
+            var expectedException = new AutoMapperMappingException("Error de mapeo");
+
+            _repositoryMock
+                .Setup(r => r.GetFirstOrDefaultAsync(
+                    It.IsAny<Expression<Func<Person, bool>>>(),
+                    It.IsAny<Expression<Func<Person, object>>[]>()))
+                .ReturnsAsync(person);
+
+            _mapperMock
+                .Setup(m => m.Map<PersonResponseDto>(person))
+                .Throws(expectedException);
+
+            // Act & Assert
+            var exception = await Assert.ThrowsAsync<AutoMapperMappingException>(
+                () => _service.GetByIdAsync(personId));
+
+            Assert.Equal(expectedException.Message, exception.Message);
+        }
+        #endregion
+
+        #region ExistsByNationalIdAsync
+        [Fact]
+        public async Task ExistsByNationalIdAsync_WhenNationalIdExists_ReturnsTrue()
+        {
+            // Arrange
+            string nationalId = "12345678";
+            _repositoryMock
+                .Setup(r => r.AnyAsync(It.IsAny<Expression<Func<Person, bool>>>()))
+                .ReturnsAsync(true);
+
+            // Act
+            var result = await _service.ExistsByNationalIdAsync(nationalId);
+
+            // Assert
+            Assert.True(result);
+            _repositoryMock.Verify(r => r.AnyAsync(
+                It.Is<Expression<Func<Person, bool>>>(expr =>
+                    expr.Compile().Invoke(new Person { NationalId = nationalId }) == true &&
+                    expr.Compile().Invoke(new Person { NationalId = "other" }) == false)),
+                Times.Once);
+
+            _loggerMock.Verify(
+                x => x.Log(LogLevel.Debug, It.IsAny<EventId>(),
+                    It.Is<It.IsAnyType>((v, t) => v.ToString().Contains($"Verificando existencia de persona con NationalId {nationalId}")),
+                    It.IsAny<Exception>(), It.IsAny<Func<It.IsAnyType, Exception, string>>()),
+                Times.Once);
+
+            _loggerMock.Verify(
+                x => x.Log(LogLevel.Debug, It.IsAny<EventId>(),
+                    It.Is<It.IsAnyType>((v, t) => v.ToString().Contains($"Resultado de existencia para NationalId {nationalId}: True")),
+                    It.IsAny<Exception>(), It.IsAny<Func<It.IsAnyType, Exception, string>>()),
+                Times.Once);
+        }
+
+        [Fact]
+        public async Task ExistsByNationalIdAsync_WhenNationalIdDoesNotExist_ReturnsFalse()
+        {
+            // Arrange
+            string nationalId = "99999999";
+            _repositoryMock
+                .Setup(r => r.AnyAsync(It.IsAny<Expression<Func<Person, bool>>>()))
+                .ReturnsAsync(false);
+
+            // Act
+            var result = await _service.ExistsByNationalIdAsync(nationalId);
+
+            // Assert
+            Assert.False(result);
+            _repositoryMock.Verify(r => r.AnyAsync(
+                It.Is<Expression<Func<Person, bool>>>(expr =>
+                    expr.Compile().Invoke(new Person { NationalId = nationalId }) == true)),
+                Times.Once);
+
+            _loggerMock.Verify(
+                x => x.Log(LogLevel.Debug, It.IsAny<EventId>(),
+                    It.Is<It.IsAnyType>((v, t) => v.ToString().Contains($"Resultado de existencia para NationalId {nationalId}: False")),
+                    It.IsAny<Exception>(), It.IsAny<Func<It.IsAnyType, Exception, string>>()),
+                Times.Once);
+        }
+
+        [Fact]
+        public async Task ExistsByNationalIdAsync_WhenRepositoryThrows_PropagatesException()
+        {
+            // Arrange
+            string nationalId = "12345678";
+            var expectedException = new InvalidOperationException("Error de base de datos");
+
+            _repositoryMock
+                .Setup(r => r.AnyAsync(It.IsAny<Expression<Func<Person, bool>>>()))
+                .ThrowsAsync(expectedException);
+
+            // Act & Assert
+            var exception = await Assert.ThrowsAsync<InvalidOperationException>(
+                () => _service.ExistsByNationalIdAsync(nationalId));
 
             Assert.Equal(expectedException.Message, exception.Message);
         }

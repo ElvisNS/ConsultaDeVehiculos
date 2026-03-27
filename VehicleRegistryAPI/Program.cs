@@ -1,6 +1,5 @@
 using FluentValidation;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
-using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using System.Security.Claims;
@@ -21,13 +20,13 @@ using VehicleRegistryAPI.Services.Car;
 using VehicleRegistryAPI.Services.Person;
 using VehicleRegistryAPI.Services.Roles;
 using VehicleRegistryAPI.Services.Users;
+using VehicleRegistryAPI.Tools.Helpers;
 using VehicleRegistryAPI.Tools.MIddleware;
 using VehicleRegistryAPI.Tools.Security;
 using VehicleRegistryAPI.Tools.Validations.AuthValidations;
 using VehicleRegistryAPI.Tools.Validations.CarValidations;
 using VehicleRegistryAPI.Tools.Validations.PersonValidations;
 using VehicleRegistryAPI.Tools.Validations.UserValidations;
-using VehicleRegistryAPI.Tools.Helpers;
 
 var builder = WebApplication.CreateBuilder(args);
 

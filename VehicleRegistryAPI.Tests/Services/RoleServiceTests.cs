@@ -4,7 +4,6 @@ using VehicleRegistryAPI.DTOS.Roles;
 using VehicleRegistryAPI.Entities;
 using VehicleRegistryAPI.Repositories.Interfaces;
 using VehicleRegistryAPI.Services.Roles;
-using VehicleRegistryAPI.Services.Users;
 
 namespace VehicleRegistryAPI.Tests.Services
 {
@@ -14,7 +13,7 @@ namespace VehicleRegistryAPI.Tests.Services
         private readonly Mock<ILogger<RoleService>> _mockLogger;
         private readonly RoleService _roleService;
 
-        public RoleServiceTests() 
+        public RoleServiceTests()
         {
             _repositoryMock = new Mock<IRolesRepository>();
             _mockLogger = new Mock<ILogger<RoleService>>();

@@ -400,7 +400,7 @@ namespace VehicleRegistryAPI.Tests.Services
 
             _personRepositoryMock
                 .Setup(r => r.GetFirstOrDefaultAsync(
-                    It.IsAny<Expression<Func<Person, bool>>>(), 
+                    It.IsAny<Expression<Func<Person, bool>>>(),
                     It.IsAny<Expression<Func<Person, object>>[]>()))
                 .ReturnsAsync(person);
 
@@ -434,7 +434,7 @@ namespace VehicleRegistryAPI.Tests.Services
 
             _personRepositoryMock
                 .Setup(r => r.GetFirstOrDefaultAsync(
-                    It.IsAny<Expression<Func<Person, bool>>>(), 
+                    It.IsAny<Expression<Func<Person, bool>>>(),
                     It.IsAny<Expression<Func<Person, object>>[]>()))
                 .ReturnsAsync(person);
 
@@ -473,7 +473,7 @@ namespace VehicleRegistryAPI.Tests.Services
 
             _personRepositoryMock
                 .Setup(r => r.GetFirstOrDefaultAsync(
-                    It.IsAny<Expression<Func<Person, bool>>>(), 
+                    It.IsAny<Expression<Func<Person, bool>>>(),
                     It.IsAny<Expression<Func<Person, object>>[]>()))
                 .ReturnsAsync(person);
 
@@ -1180,6 +1180,231 @@ namespace VehicleRegistryAPI.Tests.Services
         }
         #endregion
 
+        #region GetById
+        [Fact]
+        public async Task GetByIdAsync_ExistingCar_ReturnsCarResponseDto()
+        {
+            // Arrange
+            int carId = 1;
+            var car = new Car
+            {
+                Id = carId,
+                PlateNumber = "ABC123",
+                Brand = "Toyota",
+                Model = "Corolla",
+                IsActive = true,
+                Persons = new Person { Id = 1, NationalId = "12345678", FullName = "Juan Pérez" }
+            };
+            var responseDto = new CarResponseDto
+            {
+                Id = carId,
+                PlateNumber = "ABC123",
+                Brand = "Toyota",
+                Model = "Corolla",
+                IsActive = true,
+                Cedula = "12345678",
+                Nombre = "Juan Pérez"
+            };
+
+            _carRepositoryMock
+                .Setup(r => r.GetFirstOrDefaultAsync(
+                    It.IsAny<Expression<Func<Car, bool>>>(),
+                    It.IsAny<Expression<Func<Car, object>>[]>()))
+                .ReturnsAsync(car);
+
+            _mapperMock
+                .Setup(m => m.Map<CarResponseDto>(car))
+                .Returns(responseDto);
+
+            // Act
+            var result = await _service.GetByIdAsync(carId);
+
+            // Assert
+            Assert.NotNull(result);
+            Assert.Equal(responseDto, result);
+
+            // Verificar que se llamó al repositorio con el predicado correcto y el include
+            _carRepositoryMock.Verify(r => r.GetFirstOrDefaultAsync(
+                It.Is<Expression<Func<Car, bool>>>(expr =>
+                    expr.Compile().Invoke(new Car { Id = carId }) == true &&
+                    expr.Compile().Invoke(new Car { Id = carId + 1 }) == false),
+                It.Is<Expression<Func<Car, object>>[]>(exprs =>
+                    exprs.Length == 1 && exprs[0].Body.ToString().Contains("Persons"))),
+                Times.Once);
+
+            _mapperMock.Verify(m => m.Map<CarResponseDto>(car), Times.Once);
+
+            // Logs
+            _loggerMock.Verify(
+                x => x.Log(LogLevel.Information, It.IsAny<EventId>(),
+                    It.Is<It.IsAnyType>((v, t) => v.ToString().Contains($"Buscando vehículo por ID {carId}")),
+                    It.IsAny<Exception>(), It.IsAny<Func<It.IsAnyType, Exception, string>>()),
+                Times.Once);
+
+            _loggerMock.Verify(
+                x => x.Log(LogLevel.Information, It.IsAny<EventId>(),
+                    It.Is<It.IsAnyType>((v, t) => v.ToString().Contains($"Vehículo con ID {carId} encontrado, placa {car.PlateNumber}")),
+                    It.IsAny<Exception>(), It.IsAny<Func<It.IsAnyType, Exception, string>>()),
+                Times.Once);
+        }
+
+        [Fact]
+        public async Task GetByIdAsync_CarNotFound_ThrowsNotFoundException()
+        {
+            // Arrange
+            int carId = 999;
+
+            _carRepositoryMock
+                .Setup(r => r.GetFirstOrDefaultAsync(
+                    It.IsAny<Expression<Func<Car, bool>>>(),
+                    It.IsAny<Expression<Func<Car, object>>[]>()))
+                .ReturnsAsync((Car)null);
+
+            // Act & Assert
+            var exception = await Assert.ThrowsAsync<NotFoundException>(
+                () => _service.GetByIdAsync(carId));
+
+            Assert.Equal("Carro no encontrado", exception.Message);
+
+            _carRepositoryMock.Verify(r => r.GetFirstOrDefaultAsync(
+                It.Is<Expression<Func<Car, bool>>>(expr =>
+                    expr.Compile().Invoke(new Car { Id = carId }) == true),
+                It.IsAny<Expression<Func<Car, object>>[]>()),
+                Times.Once);
+
+            _mapperMock.Verify(m => m.Map<CarResponseDto>(It.IsAny<Car>()), Times.Never);
+
+            _loggerMock.Verify(
+                x => x.Log(LogLevel.Warning, It.IsAny<EventId>(),
+                    It.Is<It.IsAnyType>((v, t) => v.ToString().Contains($"Vehículo con ID {carId} no encontrado")),
+                    It.IsAny<Exception>(), It.IsAny<Func<It.IsAnyType, Exception, string>>()),
+                Times.Once);
+        }
+
+        [Fact]
+        public async Task GetByIdAsync_WhenRepositoryThrows_PropagatesException()
+        {
+            // Arrange
+            int carId = 1;
+            var expectedException = new InvalidOperationException("Error de base de datos");
+
+            _carRepositoryMock
+                .Setup(r => r.GetFirstOrDefaultAsync(
+                    It.IsAny<Expression<Func<Car, bool>>>(),
+                    It.IsAny<Expression<Func<Car, object>>[]>()))
+                .ThrowsAsync(expectedException);
+
+            // Act & Assert
+            var exception = await Assert.ThrowsAsync<InvalidOperationException>(
+                () => _service.GetByIdAsync(carId));
+
+            Assert.Equal(expectedException.Message, exception.Message);
+        }
+
+        [Fact]
+        public async Task GetByIdAsync_WhenMapperThrows_PropagatesException()
+        {
+            // Arrange
+            int carId = 1;
+            var car = new Car { Id = carId, PlateNumber = "ABC123" };
+            var expectedException = new AutoMapperMappingException("Error de mapeo");
+
+            _carRepositoryMock
+                .Setup(r => r.GetFirstOrDefaultAsync(
+                    It.IsAny<Expression<Func<Car, bool>>>(),
+                    It.IsAny<Expression<Func<Car, object>>[]>()))
+                .ReturnsAsync(car);
+
+            _mapperMock
+                .Setup(m => m.Map<CarResponseDto>(car))
+                .Throws(expectedException);
+
+            // Act & Assert
+            var exception = await Assert.ThrowsAsync<AutoMapperMappingException>(
+                () => _service.GetByIdAsync(carId));
+
+            Assert.Equal(expectedException.Message, exception.Message);
+        }
+        #endregion
+
+        #region ExistsByPlateNumberAsyncd
+        [Fact]
+        public async Task ExistsByPlateNumberAsync_WhenPlateNumberExists_ReturnsTrue()
+        {
+            // Arrange
+            string plateNumber = "ABC123";
+            _carRepositoryMock
+                .Setup(r => r.AnyAsync(It.IsAny<Expression<Func<Car, bool>>>()))
+                .ReturnsAsync(true);
+
+            // Act
+            var result = await _service.ExistsByPlateNumberAsync(plateNumber);
+
+            // Assert
+            Assert.True(result);
+            _carRepositoryMock.Verify(r => r.AnyAsync(
+                It.Is<Expression<Func<Car, bool>>>(expr =>
+                    expr.Compile().Invoke(new Car { PlateNumber = plateNumber }) == true &&
+                    expr.Compile().Invoke(new Car { PlateNumber = "otra" }) == false)),
+                Times.Once);
+
+            _loggerMock.Verify(
+                x => x.Log(LogLevel.Debug, It.IsAny<EventId>(),
+                    It.Is<It.IsAnyType>((v, t) => v.ToString().Contains($"Verificando existencia de vehículo con placa {plateNumber}")),
+                    It.IsAny<Exception>(), It.IsAny<Func<It.IsAnyType, Exception, string>>()),
+                Times.Once);
+
+            _loggerMock.Verify(
+                x => x.Log(LogLevel.Debug, It.IsAny<EventId>(),
+                    It.Is<It.IsAnyType>((v, t) => v.ToString().Contains($"Resultado de existencia para placa {plateNumber}: True")),
+                    It.IsAny<Exception>(), It.IsAny<Func<It.IsAnyType, Exception, string>>()),
+                Times.Once);
+        }
+
+        [Fact]
+        public async Task ExistsByPlateNumberAsync_WhenPlateNumberDoesNotExist_ReturnsFalse()
+        {
+            // Arrange
+            string plateNumber = "XYZ999";
+            _carRepositoryMock
+                .Setup(r => r.AnyAsync(It.IsAny<Expression<Func<Car, bool>>>()))
+                .ReturnsAsync(false);
+
+            // Act
+            var result = await _service.ExistsByPlateNumberAsync(plateNumber);
+
+            // Assert
+            Assert.False(result);
+            _carRepositoryMock.Verify(r => r.AnyAsync(
+                It.Is<Expression<Func<Car, bool>>>(expr =>
+                    expr.Compile().Invoke(new Car { PlateNumber = plateNumber }) == true)),
+                Times.Once);
+
+            _loggerMock.Verify(
+                x => x.Log(LogLevel.Debug, It.IsAny<EventId>(),
+                    It.Is<It.IsAnyType>((v, t) => v.ToString().Contains($"Resultado de existencia para placa {plateNumber}: False")),
+                    It.IsAny<Exception>(), It.IsAny<Func<It.IsAnyType, Exception, string>>()),
+                Times.Once);
+        }
+
+        [Fact]
+        public async Task ExistsByPlateNumberAsync_WhenRepositoryThrows_PropagatesException()
+        {
+            // Arrange
+            string plateNumber = "ABC123";
+            var expectedException = new InvalidOperationException("Error de base de datos");
+
+            _carRepositoryMock
+                .Setup(r => r.AnyAsync(It.IsAny<Expression<Func<Car, bool>>>()))
+                .ThrowsAsync(expectedException);
+
+            // Act & Assert
+            var exception = await Assert.ThrowsAsync<InvalidOperationException>(
+                () => _service.ExistsByPlateNumberAsync(plateNumber));
+
+            Assert.Equal(expectedException.Message, exception.Message);
+        }
+        #endregion
 
 
     }

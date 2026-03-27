@@ -1,5 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore;
-using VehicleRegistryAPI.Data;
+﻿using VehicleRegistryAPI.Data;
 using VehicleRegistryAPI.Entities;
 using VehicleRegistryAPI.Repositories.Generics;
 using VehicleRegistryAPI.Repositories.Interfaces;
